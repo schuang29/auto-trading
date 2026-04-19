@@ -158,16 +158,20 @@ Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Har
 
 **Exit criteria:** Met. Repo exists on GitHub, Alpaca paper account responds to API call, `claude` runs in the project directory.
 
-### Phase 1 — Strategy & guardrails (no execution)
+### Phase 1 — Strategy & guardrails (no execution) ✅ complete (April 19, 2026)
 
-- [ ] Draft `strategy/universe.md` — initial ETF whitelist (~15-25 tickers across asset classes).
-- [ ] Draft `strategy/rules.md` — regime-based tactical asset allocation in plain English.
-- [ ] Draft `strategy/regimes.md` — risk-on/risk-off signals (yield curve, VIX, momentum).
-- [ ] Draft `guardrails/hard_limits.md` and matching code in `skills/guardrails/`.
-- [ ] Write `guardrails/restricted.md` (start empty; populate as compliance answers come in).
-- [ ] Write `CLAUDE.md` — instructions for Claude Code on how to work in this repo.
+- [x] Draft `strategy/universe.md` — 15 ETFs across US equity, intl equity, credit, treasuries, inflation hedges. Sector ETFs excluded pending compliance.
+- [x] Draft `strategy/rules.md` — 8 rule groups: universe constraint, regime allocations, entry, sizing, exit, cash management, no-trade conditions, logging.
+- [x] Draft `strategy/regimes.md` — three-signal classifier: SPY vs 200-day SMA, VIX level, 10yr-2yr yield curve spread. Majority vote, 2-day confirmation.
+- [x] Draft `strategy/thesis.md` — why regime persistence justifies tactical allocation; falsification criteria defined.
+- [x] Draft `guardrails/hard_limits.md` — 10-step sequential gate model; code enforcement in `skills/guardrails/` (Phase 2).
+- [x] Write `guardrails/restricted.md` — empty pending compliance response.
+- [x] Write `guardrails/blackouts.md` — NYSE holidays via Alpaca API; employer blackouts empty pending compliance.
+- [x] Write `docs/compliance.md` — 6 open questions logged with default assumptions.
+- [x] Write `docs/decisions/0001-language.md` — ADR documenting Python choice.
+- [x] Write `CLAUDE.md` — committed in Phase 0.
 
-**Exit criteria:** A human can read the strategy and guardrails and understand exactly what the bot will and won't do.
+**Exit criteria:** Met. A human can read strategy/ and guardrails/ and understand exactly what the bot will and won't do.
 
 ### Phase 2 — Single routine, manual trigger
 
