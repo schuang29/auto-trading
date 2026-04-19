@@ -1,6 +1,6 @@
 # Autonomous ETF Trading Bot — Project Plan
 
-> **Status:** Draft v1 — Sunday, April 19, 2026
+> **Status:** Phase 0 complete — Sunday, April 19, 2026
 > **Owner:** [you]
 > **Scenario:** B (Fidelity for real execution, Alpaca paper for autonomy)
 
@@ -145,18 +145,18 @@ Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Har
 
 ## 6. Phased milestones
 
-### Phase 0 — Environment setup (target: 1 session)
+### Phase 0 — Environment setup ✅ complete (April 19, 2026)
 
-- [ ] Install / update Claude Code CLI (`claude update`, confirm v2.1.111+ for Opus 4.7).
-- [ ] Create private GitHub repo `autonomous-etf-trader`.
-- [ ] Clone locally, open in VS Code.
-- [ ] Create Alpaca paper trading account, generate API keys.
-- [ ] Create `.env` from `.env.example`, populate Alpaca paper keys.
-- [ ] Decide language (Python vs TypeScript) — Claude Code recommends, user approves.
-- [ ] Initial commit: `PLAN.md`, `README.md`, `.gitignore`, `.env.example`, language scaffolding.
-- [ ] Verify Alpaca connection with a one-line "get account" call.
+- [x] Install / update Claude Code CLI (`claude update`, confirm v2.1.111+ for Opus 4.7).
+- [x] Create private GitHub repo `auto-trading`.
+- [x] Clone locally, open in VS Code.
+- [x] Create Alpaca paper trading account, generate API keys.
+- [x] Create `.env` from `.env.example`, populate Alpaca paper keys.
+- [x] Decide language: **Python** — best Alpaca SDK (`alpaca-py`), richest finance ecosystem (pandas, yfinance), mature scheduling and notification tooling. Documented in `docs/decisions/0001-language.md` (TODO).
+- [x] Initial commit: `PLAN.md`, `CLAUDE.md`, `README.md`, `.gitignore`, `.env.example`, `requirements.txt`, `scripts/hello_alpaca.py`.
+- [x] Verify Alpaca connection: `scripts/hello_alpaca.py` returned status ACTIVE, $100k equity.
 
-**Exit criteria:** Repo exists on GitHub, Alpaca paper account responds to API call, `claude` runs in the project directory.
+**Exit criteria:** Met. Repo exists on GitHub, Alpaca paper account responds to API call, `claude` runs in the project directory.
 
 ### Phase 1 — Strategy & guardrails (no execution)
 
