@@ -1,0 +1,108 @@
+# Pre-Market Routine
+
+**Schedule:** Weekdays 7:30 AM ET
+**Purpose:** Classify today's market regime and draft trade proposals for human review.
+**Execution:** No orders are placed. Output goes to console and memory/daily/.
+
+---
+
+## Instructions
+
+You are the autonomous ETF trading bot for this project. Follow these steps exactly, in order. Do not skip steps. Do not place any orders.
+
+### Step 1 — Fetch regime signals
+
+Run the market data fetcher and capture the output:
+
+```bash
+python skills/market_data/fetcher.py
+```
+
+Record the three signal votes (trend, VIX, yield curve) and the resulting regime classification.
+
+### Step 2 — Check yesterday's regime
+
+Read the most recent file in `memory/daily/` to find yesterday's regime classification. If no prior entry exists, treat today as day 1 of the current regime (not yet confirmed).
+
+- If today's regime matches yesterday's regime: the regime is **confirmed**.
+- If today's regime differs from yesterday's: this is **day 1** of a potential regime change. Note it but do not act on it today.
+
+### Step 3 — Read current strategy files
+
+Read the following files to ground your analysis:
+- `strategy/universe.md` — approved ETF list
+- `strategy/rules.md` — trading rules, especially the target allocations for the current regime
+- `guardrails/hard_limits.md` — position caps and order limits
+- `guardrails/blackouts.md` — confirm today is not a blackout date
+- `memory/positions.md` — current paper positions (if it exists)
+
+### Step 4 — Draft trade proposals
+
+Based on the confirmed regime and current positions, identify any gaps between the current portfolio and the regime target allocation from `strategy/rules.md`.
+
+For each proposed trade:
+- State the ticker, side (buy/sell), approximate notional amount
+- Cite the rule number from `strategy/rules.md` that justifies it
+- Note the current holding period if it's a sell (Rule 3.4 / Rule 5.1)
+- Flag any trade that cannot execute today (regime not confirmed, holding period not met, blackout)
+
+Format:
+
+```
+PROPOSED TRADES (regime confirmed: YES/NO)
+------------------------------------------
+1. BUY VTI ~$X,XXX — Rule 3.1 (regime confirmed), Rule 2 (risk-on target 30%, current 0%)
+2. BUY GLD ~$X,XXX — Rule 3.1, Rule 2 (inflation hedge, target 5%)
+   [HOLD — regime not confirmed, wait for tomorrow]
+```
+
+If the regime is not confirmed, proposed trades should be listed but marked HOLD.
+
+### Step 5 — Market context summary
+
+Write a brief (3-5 bullet) summary of overnight conditions relevant to the portfolio:
+- Any major macro news (central bank decisions, CPI/jobs data releases today)
+- Futures direction (S&P, bond, gold)
+- Any ETF in the universe with unusual pre-market movement
+
+Use web search for current data. Cite sources inline.
+
+### Step 6 — Log to memory
+
+Append today's pre-market summary to the daily log using the memory logger:
+
+```bash
+python skills/memory/logger.py --type daily --content "
+## Pre-Market Brief
+
+**Regime:** [RISK-ON / NEUTRAL / RISK-OFF] (confirmed: YES/NO)
+**Signals:**
+- Trend: [detail]
+- VIX: [detail]
+- Yield curve: [detail]
+
+**Proposed trades:** [count] ([count] on hold pending confirmation)
+[list proposals]
+
+**Market context:**
+[bullet points]
+"
+```
+
+### Step 7 — Output summary to console
+
+Print the full pre-market brief so the user can review it. End with:
+
+```
+Pre-market routine complete. [N] trade proposals ready.
+Next: run market-open routine at 9:35 AM ET if regime is confirmed.
+```
+
+---
+
+## What NOT to do
+
+- Do not place any orders. This routine is analysis only.
+- Do not add tickers to the universe without user approval.
+- Do not override the 2-day regime confirmation rule even if the signal looks obvious.
+- Do not hallucinate market data. If a data fetch fails, note the failure and continue with the available signals.
