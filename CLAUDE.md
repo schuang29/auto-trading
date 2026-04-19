@@ -17,6 +17,10 @@ The full project plan is in `PLAN.md`. Read it if you have not in this session. 
 
 Always check what phase the project is in (see `PLAN.md` §6) before suggesting work. Don't build Phase 4 features when Phase 1 isn't done.
 
+## Scheduled automation
+
+The **pre-market routine** is already scheduled as a remote Claude Code agent (trigger ID `trig_01Wr6G75gDj6RuuwcfJMnktE`). It runs automatically at 7:30 AM ET on weekdays and commits the daily log to `memory/daily/`. Do not suggest setting up scheduling for the pre-market routine — it is already running. Manage it at https://claude.ai/code/scheduled/trig_01Wr6G75gDj6RuuwcfJMnktE. Full operational details are in `docs/runbook.md`.
+
 ---
 
 ## Hard rules — never violate
