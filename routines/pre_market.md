@@ -12,13 +12,28 @@ You are the autonomous ETF trading bot for this project. Follow these steps exac
 
 ### Step 1 — Fetch regime signals
 
-Run the market data fetcher and capture the output:
+Use web search to retrieve each of the three signals. Search for current values — do not use cached or estimated data.
 
+**Signal 1 — SPY trend:**
+Search: `SPY current price and 200-day moving average`
+Record: current price, 200-day SMA, and vote (risk-on if price > SMA, else risk-off).
+
+**Signal 2 — VIX:**
+Search: `VIX index current level`
+Record: current VIX level and vote (risk-on if < 20, neutral if 20-25, risk-off if > 25).
+
+**Signal 3 — Yield curve:**
+Search: `US 10 year 2 year treasury yield spread today`
+Record: spread in percentage points and vote (risk-on if > 0, neutral if 0 to -0.25, risk-off if < -0.25).
+
+Apply majority vote across all three signals to determine the regime (RISK-ON / NEUTRAL / RISK-OFF).
+
+If web search is unavailable, try running the local fetcher as a fallback:
 ```bash
-python skills/market_data/fetcher.py
+python3 -m venv .venv 2>/dev/null; .venv/bin/pip install -r requirements.txt -q 2>/dev/null; .venv/bin/python skills/market_data/fetcher.py
 ```
 
-Record the three signal votes (trend, VIX, yield curve) and the resulting regime classification.
+If both methods fail, log the failure and classify regime as UNKNOWN. Do not guess.
 
 ### Step 2 — Check yesterday's regime
 
