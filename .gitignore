@@ -32,5 +32,6 @@ Thumbs.db
 .idea/
 *.swp
 
-# Logs
+# Logs — runtime only, not committed
 *.log
+logs/
