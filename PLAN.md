@@ -173,14 +173,15 @@ Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Har
 
 **Exit criteria:** Met. A human can read strategy/ and guardrails/ and understand exactly what the bot will and won't do.
 
-### Phase 2 — Single routine, manual trigger (in progress — April 19, 2026)
+### Phase 2 — Single routine, automated via local Task Scheduler (in progress — April 19, 2026)
 
 - [x] Implement `routines/pre_market.md` — full 7-step prompt: fetch signals, check prior regime, read strategy, draft proposals, market context, log to memory, print summary.
 - [x] Implement `skills/market_data/fetcher.py` — pulls SPY 200d SMA (yfinance), VIX (yfinance), 10yr-2yr spread (FRED). Majority-vote regime classifier. Verified live: RISK-ON all three signals (2026-04-19).
 - [x] Implement `skills/guardrails/checker.py` — 10-step sequential order gate. CLI-invokable. Reads universe/restricted/blackouts at runtime.
 - [x] Implement `skills/memory/logger.py` — appends timestamped entries to memory/daily/YYYY-MM-DD.md.
 - [x] Seed `memory/positions.md` — empty starting state, $100k cash.
-- [ ] Run pre-market routine manually via `claude` for 5 consecutive trading days. Verify output quality.
+- [x] Automate pre-market routine via Windows Task Scheduler (`scripts/run_pre_market.ps1`, runs daily at 7:30 AM ET weekdays).
+- [ ] Run pre-market routine for 5 consecutive trading days. Verify output quality and that memory/daily/ is committed each day.
 - [ ] Iterate on prompt and rules based on observed output.
 
 **Exit criteria:** Pre-market routine produces useful, trustworthy output 5 days in a row.

@@ -19,7 +19,7 @@ Always check what phase the project is in (see `PLAN.md` §6) before suggesting 
 
 ## Scheduled automation
 
-The **pre-market routine** is already scheduled as a remote Claude Code agent (trigger ID `trig_01Wr6G75gDj6RuuwcfJMnktE`). It runs automatically at 7:30 AM ET on weekdays and commits the daily log to `memory/daily/`. Do not suggest setting up scheduling for the pre-market routine — it is already running. Manage it at https://claude.ai/code/scheduled/trig_01Wr6G75gDj6RuuwcfJMnktE. Full operational details are in `docs/runbook.md`.
+The **pre-market routine** runs via **Windows Task Scheduler** (task name: `AutoTrading-PreMarket`) at 7:30 AM ET on weekdays. The wrapper script is `scripts/run_pre_market.ps1` — it activates the venv, loads `.env`, runs `claude --dangerously-skip-permissions --print`, and commits + pushes `memory/daily/` to GitHub. Do not suggest setting up scheduling for the pre-market routine — it is already running. Full operational details are in `docs/runbook.md`.
 
 ---
 

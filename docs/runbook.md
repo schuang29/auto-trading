@@ -5,26 +5,29 @@
 
 ---
 
-## Scheduled agents
+## Scheduled tasks
 
 ### Pre-market routine
 
 | Field | Value |
 |-------|-------|
-| Trigger ID | `trig_01Wr6G75gDj6RuuwcfJMnktE` |
-| Schedule | Weekdays 7:30 AM ET (cron: `30 11 * * 1-5` UTC) |
+| Task name | `AutoTrading-PreMarket` |
+| Schedule | Weekdays 7:30 AM ET |
 | Model | `claude-sonnet-4-6` |
-| Repo | `https://github.com/schuang29/auto-trading` |
+| Wrapper script | `scripts/run_pre_market.ps1` |
+| Setup script | `scripts/setup_scheduler.ps1` (run once as Administrator) |
+| Log file | `logs/pre_market_YYYY-MM-DD.log` (local only, gitignored) |
 | Created | 2026-04-19 |
-| Manage | https://claude.ai/code/scheduled/trig_01Wr6G75gDj6RuuwcfJMnktE |
+| Manage | Task Scheduler (`taskschd.msc`) → Task Scheduler Library → `AutoTrading-PreMarket` |
 
 **What it does:** Follows `routines/pre_market.md` — fetches regime signals (SPY trend, VIX, yield curve), classifies the regime, reads strategy files, drafts trade proposals, writes a market context summary, logs everything to `memory/daily/YYYY-MM-DD.md`, and pushes the log to GitHub.
 
-**DST caveat:** The cron is fixed at `30 11 * * 1-5` UTC. This equals 7:30 AM EDT (summer) but 6:30 AM EST (winter). Update the cron in November when clocks fall back:
-- Summer (EDT, UTC-4): `30 11 * * 1-5`
-- Winter (EST, UTC-5): `30 12 * * 1-5`
+**DST caveat:** Windows Task Scheduler uses local time, so 7:30 AM ET is always correct across daylight saving transitions. No manual adjustment needed.
 
-Update via Claude Code: *"Update the pre-market scheduled agent cron to `30 12 * * 1-5`"*
+**Re-registering the task** (if ever needed — run PowerShell as Administrator):
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\setup_scheduler.ps1"
+```
 
 ---
 
@@ -66,7 +69,7 @@ Toggle the `pre-market-routine` trigger off. No code changes needed.
 ## Debugging a failed run
 
 1. Check `memory/daily/YYYY-MM-DD.md` — the routine logs failures inline and continues.
-2. Check `memory/daily/run-log-YYYY-MM-DD.txt` if it exists (future: added when shell wrapper is in place).
+2. Check `logs/pre_market_YYYY-MM-DD.log` — the wrapper script logs every step including errors and the Claude exit code.
 3. Common failure modes:
    - **yfinance timeout** — transient; next run will recover. No action needed.
    - **FRED API down** — yield curve signal skipped; two-signal majority vote still works.
