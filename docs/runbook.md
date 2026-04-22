@@ -13,7 +13,7 @@
 |-------|-------|
 | Task name | `AutoTrading-PreMarket` |
 | Schedule | Weekdays 7:30 AM ET |
-| Model | `claude-sonnet-4-6` |
+| Model | `claude-opus-4-7` |
 | Wrapper script | `scripts/run_pre_market.ps1` |
 | Setup script | `scripts/setup_scheduler.ps1` (run once as Administrator) |
 | Log file | `logs/pre_market_YYYY-MM-DD.log` (local only, gitignored) |

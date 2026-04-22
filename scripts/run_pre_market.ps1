@@ -122,7 +122,7 @@ $ClaudePrompt = (
     "If any step fails, log the failure to memory/daily/ and continue. Do not abort for a single failure."
 )
 
-claude --dangerously-skip-permissions --print $ClaudePrompt
+claude --dangerously-skip-permissions --model claude-opus-4-7 --print $ClaudePrompt
 $ExitCode = $LASTEXITCODE
 
 if ($ExitCode -ne 0) {
