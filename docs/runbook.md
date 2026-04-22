@@ -29,6 +29,57 @@
 powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\setup_scheduler.ps1"
 ```
 
+### Market-open routine
+
+| Field | Value |
+|-------|-------|
+| Task name | `AutoTrading-MarketOpen` |
+| Schedule | Weekdays 9:35 AM ET (starting 2026-04-27) |
+| Wrapper script | `scripts/run_market_open.ps1` |
+| Log file | `logs/market_open_YYYY-MM-DD.log` (local only, gitignored) |
+| Created | 2026-04-21 |
+| Manage | Task Scheduler (`taskschd.msc`) → Task Scheduler Library → `AutoTrading-MarketOpen` |
+
+**What it does:** Reads today's proposals from `memory/proposals/YYYY-MM-DD.json` (written by the pre-market routine), runs each through the guardrail checker, places approved notional market orders on Alpaca paper, logs every trade to `memory/decisions/`, updates `memory/positions.md`, and commits to GitHub.
+
+**Dependency:** The pre-market routine must complete first and write the proposals JSON. If the file is missing, the market-open script aborts cleanly with an error.
+
+---
+
+## Running a routine manually (ad-hoc)
+
+If your PC was off at the scheduled time, or you want to run outside the schedule:
+
+### Pre-market (fetch signals + write proposals)
+
+Option 1 — Run the wrapper script directly:
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\run_pre_market.ps1"
+```
+
+Option 2 — Trigger from Task Scheduler GUI: open `taskschd.msc` → find `AutoTrading-PreMarket` → right-click → **Run**.
+
+**Timing note:** Run after 7:00 AM ET for reliable VIX and futures data. Running earlier means slightly stale pre-market readings.
+
+### Market-open (execute proposals on Alpaca)
+
+Only run this after the pre-market routine has completed and `memory/proposals/YYYY-MM-DD.json` exists.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\run_market_open.ps1"
+```
+
+Or trigger from Task Scheduler GUI: find `AutoTrading-MarketOpen` → right-click → **Run**.
+
+**Timing note:** Best run during market hours (9:30 AM–4:00 PM ET). The guardrail checker will block orders outside market hours. If you missed the window entirely, skip that day — do not force after-hours execution.
+
+### Dry-run (validate without placing orders)
+
+To test the market-open flow without touching Alpaca:
+```powershell
+.venv\Scripts\python.exe scripts\market_open.py --dry-run
+```
+
 ---
 
 ## Checking routine output
@@ -40,21 +91,6 @@ cat memory/daily/$(date +%Y-%m-%d).md
 ```
 
 Or open the file in VS Code. The file includes the regime classification, proposed trades, and market context summary.
-
----
-
-## Running a routine manually
-
-To trigger the pre-market routine immediately (bypasses the schedule):
-
-Option 1 — Run via Claude Code locally:
-```
-claude
-> Follow the pre-market routine in routines/pre_market.md
-```
-
-Option 2 — Trigger the remote agent now via Claude Code CLI:
-*"Run the pre-market scheduled agent now"* (Claude Code will use the RemoteTrigger tool)
 
 ---
 
@@ -80,11 +116,12 @@ Toggle the `pre-market-routine` trigger off. No code changes needed.
 
 ## Adding future routines
 
-When Phase 3+ routines are ready, create additional scheduled agents following the same pattern:
+When Phase 3+ routines are ready, create additional scheduled tasks following the same pattern as the two existing ones:
 
-| Routine | Suggested schedule (ET) | Cron (EDT/UTC-4) |
-|---------|------------------------|-----------------|
-| Market open | Weekdays 9:35 AM | `35 13 * * 1-5` |
-| Midday | Weekdays 12:30 PM | `30 16 * * 1-5` |
-| End of day | Weekdays 4:15 PM | `15 20 * * 1-5` |
-| Weekly review | Fridays 5:00 PM | `0 21 * * 5` |
+| Routine | Status | Suggested schedule (ET) |
+|---------|--------|------------------------|
+| Pre-market | Live (`AutoTrading-PreMarket`) | Weekdays 7:30 AM |
+| Market open | Live (`AutoTrading-MarketOpen`) | Weekdays 9:35 AM |
+| Midday | Not yet built | Weekdays 12:30 PM |
+| End of day | Not yet built | Weekdays 4:15 PM |
+| Weekly review | Not yet built | Fridays 5:00 PM |

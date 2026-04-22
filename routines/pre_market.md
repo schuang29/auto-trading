@@ -104,7 +104,41 @@ python skills/memory/logger.py --type daily --content "
 "
 ```
 
-### Step 7 — Output summary to console
+### Step 7 — Write proposals JSON
+
+Write a structured JSON file so the market-open script can execute without parsing markdown.
+Only include proposals that are actionable today (regime confirmed, not marked HOLD).
+
+Write to `memory/proposals/YYYY-MM-DD.json` (create the directory if it doesn't exist):
+
+```bash
+python -c "
+import json, os
+from datetime import date
+from pathlib import Path
+
+proposals = [
+    # Fill in each actionable proposal as a dict:
+    # {\"ticker\": \"VTI\", \"side\": \"buy\", \"notional\": 15000, \"rule\": \"3.1, 2\", \"priority\": 1},
+]
+
+data = {
+    \"date\": date.today().isoformat(),
+    \"regime\": \"[RISK-ON / NEUTRAL / RISK-OFF]\",
+    \"confirmed\": True,  # or False if regime not confirmed
+    \"proposals\": proposals,
+}
+
+path = Path('memory/proposals') / f'{date.today().isoformat()}.json'
+path.parent.mkdir(exist_ok=True)
+path.write_text(json.dumps(data, indent=2))
+print(f'Proposals written to {path}')
+"
+```
+
+If the regime is NOT confirmed, write the file with `\"confirmed\": false` and an empty `proposals` list.
+
+### Step 8 — Output summary to console
 
 Print the full pre-market brief so the user can review it. End with:
 
