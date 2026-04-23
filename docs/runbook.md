@@ -29,6 +29,32 @@
 powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\setup_scheduler.ps1"
 ```
 
+### EOD routine
+
+| Field | Value |
+|-------|-------|
+| Task name | `AutoTrading-EOD` |
+| Schedule | Weekdays 4:15 PM ET (starting 2026-04-27) |
+| Model | `claude-sonnet-4-6` |
+| Wrapper script | `scripts/run_eod.ps1` |
+| Log file | `logs/eod_YYYY-MM-DD.log` (local only, gitignored) |
+
+**What it does:** Runs `scripts/eod.py` to fetch Alpaca paper positions, compute unrealized P&L, update high-water marks in `memory/highwatermarks.json`, check trailing stops (Rule 5.2 — 15% from HWM), update `memory/positions.md`, fetch market close context via web search, then appends an EOD summary to today's `memory/daily/` log.
+
+**Trailing stop alerts:** Any position down 15%+ from its high-water mark is flagged in the daily log. The pre-market routine reads this and generates an exit proposal for the following morning.
+
+**To run manually:**
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\run_eod.ps1"
+```
+
+**To register in Task Scheduler** (run PowerShell as Administrator — not yet done):
+```powershell
+# Register AutoTrading-EOD task pointing to run_eod.ps1, weekdays 4:15 PM ET
+```
+
+---
+
 ### Market-open routine
 
 | Field | Value |
