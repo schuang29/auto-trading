@@ -3,7 +3,7 @@
 #   powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\setup_scheduler.ps1"
 #
 # Safe to re-run: -Force overwrites existing task registrations without error.
-# Tasks registered: AutoTrading-PreMarket, AutoTrading-MarketOpen, AutoTrading-EOD
+# Tasks registered: AutoTrading-PreMarket, AutoTrading-MarketOpen, AutoTrading-Midday, AutoTrading-EOD
 
 $ProjectRoot = "C:\Users\schua\Personal\Projects\auto-trading"
 
@@ -55,6 +55,28 @@ Register-ScheduledTask `
     -Force
 
 Write-Host "Registered: AutoTrading-MarketOpen (9:35 AM)"
+
+# ── Midday: 12:30 PM ET, weekdays ────────────────────────────────────────────
+$action = New-ScheduledTaskAction `
+    -Execute "powershell.exe" `
+    -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ProjectRoot\scripts\run_midday.ps1`"" `
+    -WorkingDirectory $ProjectRoot
+
+$trigger = New-ScheduledTaskTrigger `
+    -Weekly `
+    -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday `
+    -At "12:30PM"
+
+Register-ScheduledTask `
+    -TaskName "AutoTrading-Midday" `
+    -Action $action `
+    -Trigger $trigger `
+    -Settings $settings `
+    -Description "ETF trading bot midday routine - 12:30 PM ET weekdays" `
+    -RunLevel Highest `
+    -Force
+
+Write-Host "Registered: AutoTrading-Midday (12:30 PM)"
 
 # ── EOD: 4:15 PM ET, weekdays ─────────────────────────────────────────────────
 $action = New-ScheduledTaskAction `

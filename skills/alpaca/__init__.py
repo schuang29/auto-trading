@@ -46,6 +46,8 @@ def get_positions() -> list[dict]:
             "market_value": float(p.market_value),
             "current_price": float(p.current_price),
             "unrealized_pl": float(p.unrealized_pl),
+            "unrealized_intraday_pl": float(p.unrealized_intraday_pl),
+            "unrealized_intraday_plpc": float(p.unrealized_intraday_plpc),
         }
         for p in positions
     ]
