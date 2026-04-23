@@ -25,9 +25,13 @@ def write_proposals(data: dict) -> Path:
     return path
 
 
-def run_market_open(extra_args: list[str] | None = None) -> subprocess.CompletedProcess:
+def run_market_open(extra_args: list[str] | None = None, env: dict | None = None) -> subprocess.CompletedProcess:
+    import os
+    run_env = os.environ.copy()
+    if env:
+        run_env.update(env)
     cmd = [str(PYTHON), str(ROOT / "scripts" / "market_open.py")] + (extra_args or [])
-    return subprocess.run(cmd, capture_output=True, text=True, cwd=str(ROOT))
+    return subprocess.run(cmd, capture_output=True, text=True, cwd=str(ROOT), env=run_env)
 
 
 class TestMarketOpenDryRun:
@@ -67,7 +71,7 @@ class TestMarketOpenDryRun:
         })
         before = set(DECISIONS_DIR.glob("*.md")) if DECISIONS_DIR.exists() else set()
 
-        result = run_market_open(["--dry-run"])
+        result = run_market_open(["--dry-run"], env={"_CHECKER_NOW_ET": "2026-04-25T10:00:00"})
 
         after = set(DECISIONS_DIR.glob("*.md")) if DECISIONS_DIR.exists() else set()
         new_files = after - before

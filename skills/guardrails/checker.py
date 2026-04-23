@@ -10,6 +10,7 @@ Returns exit code 0 if the order passes all checks, 1 if any check fails.
 Prints a structured result to stdout.
 """
 import argparse
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -67,7 +68,12 @@ def run_checks(
 ) -> list[CheckResult]:
     results = []
     today = date.today()
-    now_et = datetime.now(ET)
+    # _CHECKER_NOW_ET lets tests inject a specific time (ISO format, e.g. "2026-04-25T10:00:00")
+    # so the market-hours check can be exercised without waiting for a real market window.
+    if _override := os.environ.get("_CHECKER_NOW_ET"):
+        now_et = datetime.fromisoformat(_override).replace(tzinfo=ET)
+    else:
+        now_et = datetime.now(ET)
 
     # 1. Blackout dates
     blackouts = _load_blackout_dates()

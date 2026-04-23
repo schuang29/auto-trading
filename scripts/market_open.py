@@ -56,7 +56,7 @@ def log_decision(ticker: str, side: str, notional: float, order_id: str,
 | Dry run | {"YES" if dry_run else "NO"} |
 """
     path.write_text(content, encoding="utf-8")
-    print(f"  Decision logged → {fname}")
+    print(f"  Decision logged -> {fname}")
 
 
 def update_positions(dry_run: bool) -> None:
@@ -109,9 +109,9 @@ def update_positions(dry_run: bool) -> None:
 def main(dry_run: bool) -> None:
     today = date.today().isoformat()
     now_et = datetime.now(ET)
-    print(f"\n=== Market-Open Routine — {today} {now_et.strftime('%H:%M ET')} ===")
+    print(f"\n=== Market-Open Routine - {today} {now_et.strftime('%H:%M ET')} ===")
     if dry_run:
-        print("  [DRY RUN — no real orders will be placed]\n")
+        print("  [DRY RUN - no real orders will be placed]\n")
 
     data = load_proposals(today)
 
@@ -133,9 +133,9 @@ def main(dry_run: bool) -> None:
         ticker = prop["ticker"]
         side = prop["side"]
         notional = float(prop["notional"])
-        rule = prop.get("rule", "—")
+        rule = prop.get("rule", "-")
 
-        print(f"  Checking {side.upper()} {ticker} ${notional:,.0f} …")
+        print(f"  Checking {side.upper()} {ticker} ${notional:,.0f} ...")
 
         checks = run_checks(
             ticker=ticker,
