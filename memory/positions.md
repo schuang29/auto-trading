@@ -4,7 +4,7 @@
 > Updated by every routine that changes positions (market-open, midday, EOD).
 > Never manually edit - only routines write here.
 
-Last updated: 2026-04-23 (EOD routine)
+Last updated: 2026-04-24 (EOD routine)
 
 ---
 
