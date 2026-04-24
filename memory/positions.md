@@ -2,19 +2,21 @@
 
 > Source of truth for open Alpaca paper positions.
 > Updated by every routine that changes positions (market-open, midday, EOD).
-> Never manually edit — only routines write here.
+> Never manually edit - only routines write here.
 
-Last updated: 2026-04-19 (Phase 2 start)
+Last updated: 2026-04-23 (EOD routine)
 
 ---
 
 ## Open positions
 
-*(None — paper account starts fully in cash, $100,000.00)*
+*(None - fully in cash)*
 
----
 
-## Position format (once trading begins)
+## Account summary
 
-| Ticker | Shares | Avg cost | Current price | Market value | % of equity | Entry date | Regime at entry |
-|--------|--------|----------|---------------|--------------|-------------|------------|-----------------|
+| Field | Value |
+|-------|-------|
+| Equity | $100,000.00 |
+| Cash | $100,000.00 |
+| Buying power | $200,000.00 |
