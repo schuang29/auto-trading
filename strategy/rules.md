@@ -22,13 +22,12 @@ Target allocations are guidelines. Actual orders are sized to move toward the ta
 
 | Ticker | Target weight |
 |--------|--------------|
-| VTI | 30% |
-| QQQ | 15% |
+| VTI | 32.5% |
+| QQQ | 17.5% |
 | VIG | 10% |
 | VEA | 10% |
 | VWO | 5% |
 | HYG | 5% |
-| VNQ | 5% |
 | GLD | 5% |
 | BND | 10% |
 | IEF | 5% |
