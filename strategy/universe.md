@@ -1,10 +1,10 @@
 # ETF Universe — Approved Trading List
 
-> Last updated: 2026-04-19
-> Status: Pending compliance confirmation (open question #2 in docs/compliance.md)
+> Last updated: 2026-04-23
+> Status: Confirmed against firm policy Appendix 2 (Personal Trading Policy v2.1, March 31, 2026)
 >
 > The bot may ONLY trade tickers on this list. Any ticker not listed here is implicitly restricted.
-> Sector ETFs are excluded from the initial universe pending compliance review.
+> Sector ETFs are excluded from the initial universe (not present in Appendix 2 approved list).
 
 ---
 
@@ -23,7 +23,6 @@
 | Ticker | Fund | Role | Notes |
 |--------|------|------|-------|
 | HYG | iShares iBoxx High Yield Corporate Bond ETF | High yield credit | Risk-on signal: spreads tightening |
-| VNQ | Vanguard Real Estate ETF | US REITs | Risk-on / inflation hedge; rate-sensitive |
 
 ## Neutral / Transition
 
@@ -46,7 +45,7 @@
 |--------|------|------|-------|
 | TIP | iShares TIPS Bond ETF | Inflation-protected treasuries | Hold when CPI trending up and regime is neutral/risk-off |
 | GLD | SPDR Gold Shares ETF | Gold | Risk-off and inflation hedge; low correlation to equities |
-| PDBC | Invesco Optimum Yield Diversified Commodity Strategy ETF | Broad commodities | Inflation and risk-on commodity cycle exposure |
+| GSG | iShares S&P GSCI Commodity-Indexed Trust | Broad commodities | Inflation and risk-on commodity cycle exposure; replaces PDBC (not in Appendix 2) |
 
 ---
 
