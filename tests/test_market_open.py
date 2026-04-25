@@ -62,6 +62,18 @@ class TestMarketOpenDryRun:
         assert result.returncode == 0
         assert "not confirmed" in result.stdout.lower()
 
+    def test_skips_when_observe_only(self):
+        write_proposals({
+            "date": date.today().isoformat(),
+            "regime": "RISK-ON",
+            "confirmed": True,
+            "observe_only": True,
+            "proposals": [{"ticker": "VTI", "side": "buy", "notional": 15000, "rule": "3.1"}],
+        })
+        result = run_market_open(["--dry-run"])
+        assert result.returncode == 0
+        assert "observe-only" in result.stdout.lower()
+
     def test_dry_run_approved_order_logs_decision(self):
         write_proposals({
             "date": date.today().isoformat(),

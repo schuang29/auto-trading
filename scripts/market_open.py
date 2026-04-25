@@ -115,6 +115,10 @@ def main(dry_run: bool) -> None:
 
     data = load_proposals(today)
 
+    if data.get("observe_only"):
+        print("Observe-only period active. No trades today (first execution not yet reached).")
+        sys.exit(0)
+
     if not data.get("confirmed"):
         print("Regime not confirmed. No trades today per Rule 3.1.")
         sys.exit(0)
