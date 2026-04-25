@@ -47,7 +47,7 @@ $env:PATH = $env:PATH -replace ([regex]::Escape("C:\Users\schua\AppData\Local\Mi
 
 # ── Verify venv exists ────────────────────────────────────────────────────────
 if (-not (Test-Path $VenvPython)) {
-    Write-Log "ERROR: venv not found at $VenvPython — run the pre-market routine first."
+    Write-Log "ERROR: venv not found at $VenvPython - run the pre-market routine first."
     exit 1
 }
 

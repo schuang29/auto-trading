@@ -1,6 +1,9 @@
 """
 Order guardrail checker. Validates a proposed order against all hard limits.
-Reads strategy/universe.md and guardrails/ files at runtime.
+
+The authoritative whitelist is strategy/appendix_2_approved.json (firm policy
+Appendix 2). The markdown file strategy/universe.md is a human-readable curated
+subset and is NOT used for whitelist enforcement — only the JSON is.
 
 Usage:
     python skills/guardrails/checker.py --ticker VTI --side buy --notional 5000 \
@@ -10,6 +13,7 @@ Returns exit code 0 if the order passes all checks, 1 if any check fails.
 Prints a structured result to stdout.
 """
 import argparse
+import json
 import os
 import re
 import sys
@@ -37,17 +41,37 @@ class CheckResult:
     reason: str
 
 
-def _load_universe() -> set[str]:
-    path = ROOT / "strategy" / "universe.md"
-    text = path.read_text(encoding="utf-8")
-    # Extract ticker symbols from markdown table rows: | TICKER |
-    return set(re.findall(r"\|\s*([A-Z]{2,5})\s*\|", text))
+def _load_approved_universe() -> set[str]:
+    """
+    Load the authoritative approved ticker list from Appendix 2 JSON.
+    Flattens all category arrays into a single set of tickers.
+    """
+    path = ROOT / "strategy" / "appendix_2_approved.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    tickers: set[str] = set()
+    for category, ticker_list in data.get("approved_tickers", {}).items():
+        tickers.update(ticker_list)
+    return tickers
 
 
 def _load_restricted() -> set[str]:
+    """
+    Load explicitly-restricted tickers from guardrails/restricted.md.
+    These are Appendix 3 removals plus bot-imposed restrictions.
+    Pattern matches ticker symbols appearing as the first cell of a markdown
+    table row (e.g. "| VIXY | reason... |").
+    """
     path = ROOT / "guardrails" / "restricted.md"
     text = path.read_text(encoding="utf-8")
-    return set(re.findall(r"\|\s*([A-Z]{2,5})\s*\|", text))
+    tickers: set[str] = set()
+    for line in text.splitlines():
+        # Skip the format-example row and header rows
+        if "TICKER" in line or "Ticker" in line or "---" in line:
+            continue
+        m = re.match(r"\|\s*([A-Z]{2,5})\s*\|", line)
+        if m:
+            tickers.add(m.group(1))
+    return tickers
 
 
 def _load_blackout_dates() -> set[date]:
@@ -95,16 +119,16 @@ def run_checks(
         reason="OK" if in_hours else f"Outside market hours (ET {now_et.strftime('%H:%M')})",
     ))
 
-    # 3. Whitelist
-    universe = _load_universe()
+    # 3. Whitelist — MUST be in Appendix 2 JSON (authoritative firm policy list)
+    universe = _load_approved_universe()
     on_whitelist = ticker in universe
     results.append(CheckResult(
         passed=on_whitelist,
-        check="whitelist",
-        reason="OK" if on_whitelist else f"{ticker} not in strategy/universe.md",
+        check="appendix_2_whitelist",
+        reason="OK" if on_whitelist else f"{ticker} not in strategy/appendix_2_approved.json (firm Appendix 2)",
     ))
 
-    # 4. Restricted list
+    # 4. Restricted list — Appendix 3 removals plus bot-imposed restrictions
     restricted = _load_restricted()
     not_restricted = ticker not in restricted
     results.append(CheckResult(

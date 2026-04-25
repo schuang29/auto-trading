@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(.venv/Scripts/python skills/market_data/fetcher.py)"
+      "Bash(.venv/Scripts/python skills/market_data/fetcher.py)",
+      "Bash(powershell.exe *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "WebSearch",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_market_open.py -v)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_eod.py -v)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/ -v)",
+      "Bash(git commit *)",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-PreMarket\")",
+      "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-MarketOpen\")",
+      "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-Midday\")",
+      "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-EOD\")"
     ]
   }
 }
