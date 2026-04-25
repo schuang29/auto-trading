@@ -1,0 +1,73 @@
+{
+  "date": "2026-04-24",
+  "regime": "RISK-ON",
+  "confirmed": true,
+  "observe_only": true,
+  "proposals": [
+    {
+      "ticker": "VTI",
+      "side": "buy",
+      "notional": 16250,
+      "rule": "3.1, 2",
+      "priority": 1
+    },
+    {
+      "ticker": "QQQ",
+      "side": "buy",
+      "notional": 8750,
+      "rule": "3.1, 2",
+      "priority": 2
+    },
+    {
+      "ticker": "VIG",
+      "side": "buy",
+      "notional": 5000,
+      "rule": "3.1, 2",
+      "priority": 3
+    },
+    {
+      "ticker": "VEA",
+      "side": "buy",
+      "notional": 5000,
+      "rule": "3.1, 2",
+      "priority": 4
+    },
+    {
+      "ticker": "BND",
+      "side": "buy",
+      "notional": 5000,
+      "rule": "3.1, 2",
+      "priority": 5
+    }
+  ],
+  "deferred": [
+    {
+      "ticker": "VWO",
+      "side": "buy",
+      "notional": 2500,
+      "rule": "3.1, 2",
+      "priority": 6
+    },
+    {
+      "ticker": "HYG",
+      "side": "buy",
+      "notional": 2500,
+      "rule": "3.1, 2",
+      "priority": 7
+    },
+    {
+      "ticker": "GLD",
+      "side": "buy",
+      "notional": 2500,
+      "rule": "3.1, 2",
+      "priority": 8
+    },
+    {
+      "ticker": "IEF",
+      "side": "buy",
+      "notional": 2500,
+      "rule": "3.1, 2",
+      "priority": 9
+    }
+  ]
+}
