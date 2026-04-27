@@ -81,8 +81,9 @@ Write-Log "Proposals file found: $ProposalsFile"
 
 # ── Execute market-open script ────────────────────────────────────────────────
 Write-Log "Running market_open.py..."
-& $VenvPython "$ProjectRoot\scripts\market_open.py"
+$pyOutput = & $VenvPython "$ProjectRoot\scripts\market_open.py"
 $ExitCode = $LASTEXITCODE
+foreach ($line in $pyOutput) { Write-Log $line }
 
 if ($ExitCode -ne 0) {
     Write-Log "ERROR: market_open.py exited with code $ExitCode"

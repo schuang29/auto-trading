@@ -4,7 +4,7 @@
 > **Restricted**: `guardrails/restricted.md` — Appendix 3 removals and bot-imposed restrictions.
 > **This file**: human-readable curated view of tickers the strategy actively considers, organized by role. The *whitelist* is the JSON; this markdown is the *strategy's preferred shortlist*.
 
-Last updated: 2026-04-24
+Last updated: 2026-04-27
 Compliance status: Confirmed — firm rep explicitly approved Appendix 2 as the auto-trading universe.
 
 ---
@@ -38,9 +38,8 @@ Bot routines should prefer the curated shortlist below. Only deviate to other Ap
 
 | Ticker | Fund | Role |
 |--------|------|------|
-| VIG | Vanguard Dividend Appreciation | Quality / dividend growth, lower vol |
+| DGRO | iShares Core Dividend Growth | Quality / dividend growth, lower vol (VIG equivalent; VIG not on Appendix 2) |
 | SCHD | Schwab US Dividend Equity | Dividend alternative |
-| DGRO | iShares Core Dividend Growth | Dividend alternative |
 | NOBL | ProShares S&P 500 Dividend Aristocrats | Long-history dividend growers |
 | QUAL | iShares MSCI USA Quality Factor | Quality factor tilt |
 | USMV | iShares MSCI USA Min Vol | Low-volatility equity |
