@@ -1,0 +1,42 @@
+{
+  "date": "2026-04-27",
+  "regime": "RISK-ON",
+  "confirmed": true,
+  "proposals": [
+    {
+      "ticker": "VTI",
+      "side": "buy",
+      "notional": 16250,
+      "rule": "3.1, 2",
+      "priority": 1
+    },
+    {
+      "ticker": "QQQ",
+      "side": "buy",
+      "notional": 8750,
+      "rule": "3.1, 2",
+      "priority": 2
+    },
+    {
+      "ticker": "VIG",
+      "side": "buy",
+      "notional": 5000,
+      "rule": "3.1, 2",
+      "priority": 3
+    },
+    {
+      "ticker": "VEA",
+      "side": "buy",
+      "notional": 5000,
+      "rule": "3.1, 2",
+      "priority": 4
+    },
+    {
+      "ticker": "BND",
+      "side": "buy",
+      "notional": 5000,
+      "rule": "3.1, 2",
+      "priority": 5
+    }
+  ]
+}
