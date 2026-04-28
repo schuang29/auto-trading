@@ -223,6 +223,104 @@ Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Har
 
 **Exit criteria:** Strategy has measured edge over a buy-and-hold SPY benchmark across the paper period, OR strategy is revised with documented rationale.
 
+### Phase 7 — Performance data capture (do this next)
+
+This phase must ship before Phase 8 (the UI). The UI can only show data we have already collected, and every day this is delayed is a day of performance history lost. Backfilling from prose memory logs is unreliable.
+
+**Why now**: The bot is running on Alpaca paper but `memory/timeseries/` does not exist. Daily memory logs are prose — they can be read but not charted. We need structured CSV capture starting with the next EOD run.
+
+**What gets captured**: Three append-only CSVs in `memory/timeseries/`, written by the EOD routine after market close.
+
+**`portfolio_daily.csv`** — one row per trading day:
+
+| Column | Type | Source |
+|---|---|---|
+| date | YYYY-MM-DD | EOD timestamp |
+| equity | float | Alpaca account.equity |
+| cash | float | Alpaca account.cash |
+| positions_value | float | Alpaca account.long_market_value |
+| daily_pnl | float | today_equity - yesterday_equity |
+| daily_pnl_pct | float | daily_pnl / yesterday_equity |
+| cumulative_pnl | float | today_equity - starting_equity |
+| cumulative_pnl_pct | float | cumulative_pnl / starting_equity |
+
+**`positions_daily.csv`** — one row per (date, ticker) held:
+
+| Column | Type | Source |
+|---|---|---|
+| date | YYYY-MM-DD | EOD timestamp |
+| ticker | string | Alpaca position.symbol |
+| quantity | float | Alpaca position.qty |
+| avg_cost | float | Alpaca position.avg_entry_price |
+| market_price | float | Alpaca position.current_price |
+| market_value | float | Alpaca position.market_value |
+| unrealized_pnl | float | Alpaca position.unrealized_pl |
+| weight_pct | float | market_value / portfolio_equity |
+
+**`benchmarks_daily.csv`** — one row per (date, benchmark):
+
+| Column | Type | Source |
+|---|---|---|
+| date | YYYY-MM-DD | EOD timestamp |
+| benchmark | string | "SPY", "AGG", "VT", "60_40_BLEND" |
+| close_price | float | Alpaca historical bar (null for blends) |
+| daily_return_pct | float | computed from prior day close |
+| cumulative_return_pct | float | computed from start_date close |
+
+**Initial benchmarks**: SPY (US equity baseline), AGG (US bond baseline), 60_40_BLEND (60% SPY + 40% AGG, computed — most honest comparison for a balanced strategy), VT (global equity).
+
+**Why CSV**: trivial to write, trivial to read into pandas/Excel, auditable in git diffs, append-only by nature. Alternatives (JSON, sqlite, Parquet) add complexity without benefit at this scale.
+
+**Implementation tasks**:
+- [ ] Create `memory/timeseries/` directory with `.gitkeep`.
+- [ ] `skills/timeseries/recorder.py` — three idempotent append/update functions (re-running EOD same day must not duplicate rows).
+- [ ] `skills/timeseries/benchmarks.py` — fetch benchmark closes via Alpaca historical bars (no third-party data sources). Compute the 60/40 blend.
+- [ ] Update `routines/eod.md` to call the recorder after position reconciliation, before commit.
+- [ ] `scripts/backfill_benchmarks.py` — populate `benchmarks_daily.csv` from the bot's start date (2026-04-19) through yesterday. Portfolio CSV cannot be backfilled and starts fresh from Phase 7 ship date.
+- [ ] `tests/timeseries_test.py` — idempotence, math correctness, schema validation, blend math.
+- [ ] `docs/decisions/NNNN-timeseries-format.md` ADR explaining CSV choice and schema rationale.
+
+**Exit criteria**:
+- EOD routine has written valid rows to all three CSVs for 5+ consecutive trading days.
+- Re-running EOD on the same day does not create duplicate rows.
+- Benchmarks CSV has historical data going back to 2026-04-19.
+- All tests pass.
+
+---
+
+### Phase 8 — Performance UI
+
+After Phase 7 has been collecting data for at least 2-3 weeks (enough to make charts meaningful), build a dashboard.
+
+**Architectural options**:
+- **Option A — Static HTML (recommended for v1)**: A script regenerates a single HTML file after each EOD run and commits it to the repo. Zero infrastructure, free, works without the dashboard ever being "running."
+- **Option B — Local Streamlit app**: Interactive, but requires manual launch; PC must be on.
+- **Option C — Hosted dashboard** (Streamlit Cloud, Render): Always-on, accessible from phone. Adds hosting cost and exposes positions outside the local machine — defer unless there's a clear reason.
+
+Start with Option A. Upgrade to B if interactivity matters. Skip C unless data needs to leave the machine.
+
+**Dashboard sections, in priority order**:
+1. **Equity curve vs benchmarks** — bot's equity overlaid with SPY, AGG, 60/40. Single most important chart. Answers "is this strategy worth the complexity?"
+2. **Daily P&L** — bar chart, 30/90 day windows.
+3. **Current allocation** — pie/donut by ticker.
+4. **Drawdown chart** — running drawdown from prior high water mark.
+5. **Performance summary** — total return, annualized return, volatility, Sharpe, max drawdown, beta to SPY, alpha vs 60/40.
+6. **Recent trades** — pulled from `memory/decisions/`, last 10 with rationale.
+7. **Regime history** — color-coded calendar of identified regimes.
+
+**Implementation tasks**:
+- [ ] Decide A vs B based on how Phase 7 data feels after a few weeks.
+- [ ] `dashboard/` directory with rendering logic (matplotlib + plotly for static; Streamlit + plotly for interactive).
+- [ ] Hook into EOD for automatic regeneration (Option A) or document launch command (Option B).
+- [ ] `dashboard/README.md` explaining how to view and what each chart means.
+
+**Exit criteria**:
+- Dashboard renders without errors on real data.
+- Equity-curve-vs-60/40 makes "is the strategy beating passive 60/40?" answerable in under 2 seconds.
+- Performance summary values match independent pandas calculation.
+
+**Open question for later**: Once Fidelity manual execution starts, the real portfolio diverges from Alpaca paper. Does the dashboard track paper, real Fidelity holdings, or both side-by-side? Decide as part of Phase 5 (Fidelity reconciliation), not now.
+
 ---
 
 ## 7. Risks & mitigations
@@ -270,5 +368,7 @@ The project is "v1 done" when all of the following are true:
 - Strategy performance vs SPY benchmark is documented in a weekly review.
 - Compliance has signed off (or the user has confirmed no sign-off is required).
 - Repo, decisions, and memory logs are complete and would let a third party reconstruct every trade.
+- Phase 7 data capture has run for 30+ trading days with no missing rows.
+- Dashboard renders correctly; equity curve vs 60/40 benchmark documented in a weekly review with discussion of whether the bot is earning its complexity.
 
 After v1, candidate v2 features include: backtesting framework, strategy variations, multi-account support, tax-aware rebalancing, options (if compliance ever allows).
