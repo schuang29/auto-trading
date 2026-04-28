@@ -2,9 +2,9 @@
 
 > Source of truth for open Alpaca paper positions.
 > Updated by every routine that changes positions (market-open, midday, EOD).
-> Never manually edit - only routines write here.
+> Never manually edit — only routines write here.
 
-Last updated: 2026-04-27 (EOD routine)
+Last updated: 2026-04-28 (market-open routine)
 
 ---
 
@@ -12,15 +12,15 @@ Last updated: 2026-04-27 (EOD routine)
 
 | Ticker | Shares | Avg cost | Current price | Market value | % of equity | Entry date | Regime at entry |
 |--------|--------|----------|---------------|--------------|-------------|------------|------------------|
-| BND | 67.7415 | $73.81 | $73.74 | $4,995.26 | 5.0% | 2026-04-27 | RISK-ON |
-| QQQ | 13.2054 | $662.61 | $663.80 | $8,765.71 | 8.8% | 2026-04-27 | RISK-ON |
-| VEA | 73.0780 | $68.42 | $68.06 | $4,973.69 | 5.0% | 2026-04-27 | RISK-ON |
-| VTI | 46.1332 | $352.24 | $352.53 | $16,263.32 | 16.3% | 2026-04-27 | RISK-ON |
+| BND | 67.7415 | $73.81 | $73.64 | $4,988.48 | 5.0% | 2026-04-28 | — |
+| QQQ | 13.2054 | $662.61 | $657.25 | $8,679.22 | 8.7% | 2026-04-28 | — |
+| VEA | 73.0780 | $68.42 | $67.78 | $4,953.23 | 5.0% | 2026-04-28 | — |
+| VTI | 46.1332 | $352.24 | $351.08 | $16,196.66 | 16.2% | 2026-04-28 | — |
 
 ## Account summary
 
 | Field | Value |
 |-------|-------|
-| Equity | $99,997.99 |
+| Equity | $99,817.59 |
 | Cash | $65,000.00 |
-| Buying power | $164,997.99 |
+| Buying power | $142,317.59 |
