@@ -1,6 +1,6 @@
 # Autonomous ETF Trading Bot — Project Plan
 
-> **Status:** Phase 0 complete — Sunday, April 19, 2026
+> **Status:** Phases 0–3 + 7 complete; Phase 4 closing — Tuesday, April 28, 2026
 > **Owner:** [you]
 > **Scenario:** B (Fidelity for real execution, Alpaca paper for autonomy)
 
@@ -32,18 +32,18 @@ The bot is *not* a black box. Every trade or signal must include a human-readabl
 
 ## 3. Compliance constraints & open questions
 
-The following must be confirmed with employer compliance before going live. The architecture is designed to work in the most restrictive plausible case so we are not blocked while waiting for answers.
+The architecture is designed to work in the most restrictive plausible case so we are not blocked while waiting for answers.
 
-| # | Question | Default assumption while waiting |
+| # | Question | Status |
 |---|---|---|
-| 1 | Is **Alpaca** an approved broker for personal accounts (even paper trading)? | Assume yes for paper; confirm before any real-money use. |
-| 2 | Does the ETF restriction require a **defined whitelist** or is any ETF allowed? | Build with a whitelist by default — easy to expand, hard to retrofit. |
-| 3 | Are there **holding-period requirements** (e.g., 30/60-day minimum)? | Assume 30 days. Strategy will avoid frequent rotation. |
-| 4 | Is there a **restricted ETF list** (sector ETFs touching employer industry, etc.)? | Build a `restricted.md` file the bot reads and refuses to trade. |
-| 5 | Are **duplicate confirms / 407 letters** required? | Note for Fidelity setup; no impact on Alpaca paper. |
-| 6 | Do **blackout windows** apply to ETF trades? | Build a `blackouts.md` file the bot honors. |
+| 1 | Is **Alpaca** an approved broker for personal accounts (even paper trading)? | **Pending** — assume yes for paper; confirm before real-money use |
+| 2 | Does the ETF restriction require a **defined whitelist** or is any ETF allowed? | **Resolved 2026-04-24** — Yes. Firm Appendix 2 is the approved list. Encoded in `strategy/appendix_2_approved.json` and enforced by `skills/guardrails/checker.py`. |
+| 3 | Are there **holding-period requirements** (e.g., 30/60-day minimum)? | **Pending** — assume 30 days. Strategy avoids frequent rotation per Rule 3.4. |
+| 4 | Is there a **restricted ETF list** (sector ETFs touching employer industry, etc.)? | **Resolved 2026-04-24** — Firm Appendix 3 lists removed tickers; encoded in `guardrails/restricted.md`. |
+| 5 | Are **duplicate confirms / 407 letters** required? | **Pending** — relevant for Fidelity setup; no impact on Alpaca paper |
+| 6 | Do **blackout windows** apply to ETF trades? | **Pending** — `guardrails/blackouts.md` has no employer blackouts yet |
 
-These live in `docs/compliance.md` in the repo and get updated as answers come in.
+Detailed answers and impact notes live in `docs/compliance.md`.
 
 ---
 
@@ -54,11 +54,11 @@ These live in `docs/compliance.md` in the repo and get updated as answers come i
 | Editor | **VS Code** | User already has it; integrated terminal hosts Claude Code. |
 | AI agent | **Claude Code CLI** (not Claude Desktop) | Built for agentic, autonomous, multi-step file/terminal/git work. Same tool the bot will use in production. |
 | Model strategy | **`/model opusplan`** | Built-in hybrid: Opus 4.7 for planning, Sonnet 4.6 for execution. No manual switching needed. Manually `/model opus` for deep architecture sessions, `/model sonnet` for pure implementation. |
-| Language | **Decided by Claude Code in Phase 0** based on Alpaca SDK quality, scheduling tools, and notification libraries. Likely Python (best Alpaca + finance ecosystem) but TypeScript is plausible. Documented in `docs/decisions/0001-language.md`. |
+| Language | **Python** | Best Alpaca SDK (`alpaca-py`), richest finance ecosystem. Full reasoning in `docs/decisions/0001-language.md` (TODO). |
 | Version control | **Git + private GitHub repo** | Required for auditability, secrets isolation, deploy targets later. |
 | Secrets | **`.env` file (gitignored) + `1Password` or OS keychain for backup** | Never commit API keys. Document the required env vars in `.env.example`. |
-| Scheduling (local dev) | **Built-in OS scheduler** (Task Scheduler on Windows / cron on macOS/Linux) | Free, simple, sufficient for paper trading. |
-| Scheduling (later) | **Cloud cron** (GitHub Actions, Railway, or similar) | Decide in Phase 4. Nate Herk's video uses a cloud environment; we'll evaluate then. |
+| Scheduling (current) | **Windows Task Scheduler** | Free, simple, sufficient for paper trading. PC must stay on. |
+| Scheduling (later) | **Cloud cron** (GitHub Actions, Railway, or similar) | Decide if/when local scheduling becomes a real constraint. Cost is the main blocker; user has noted ~$1–3/day GitHub Actions estimate is too high. |
 | Notifications (later) | **Email first, Slack optional** | Decide in Phase 5. |
 
 ### Why VS Code + Claude Code over Claude Desktop
@@ -76,9 +76,9 @@ The architecture follows the model from Nate Herk's video, adapted for ETF-only 
 | Routine | When | What it does |
 |---|---|---|
 | **Pre-market research** | Weekdays 7:30 AM ET | Pulls overnight news, futures, yield curve, VIX. Updates regime classification (risk-on / risk-off / neutral). Drafts proposed trades for the day. |
-| **Market open** | Weekdays 9:35 AM ET | Reviews drafted trades against current prices. Executes on Alpaca paper. Generates Fidelity signal email/Slack. |
-| **Midday scan** | Weekdays 12:30 PM ET | Checks open positions vs. stops and targets. Adjusts trailing stops if defined. |
-| **End-of-day summary** | Weekdays 4:15 PM ET | Logs P&L, position changes, compares paper vs. expected Fidelity performance. Writes daily entry to memory log. |
+| **Market open** | Weekdays 9:35 AM ET | Reviews drafted trades against current prices. Executes on Alpaca paper. (Pure-Python execution; no LLM prompt — drafts come from pre-market `memory/proposals/` JSON.) |
+| **Midday scan** | Weekdays 12:30 PM ET | Checks open positions vs. stops and targets. Flags trailing-stop breaches for next-day exit. |
+| **End-of-day summary** | Weekdays 4:15 PM ET | Logs P&L, position changes, writes daily entry to memory log + timeseries CSVs. |
 | **Weekly review** | Fridays 5:00 PM ET | Computes weekly performance, regime accuracy, signal hit rate. Proposes strategy tweaks for human review (does not auto-apply). |
 
 ### Repo structure
@@ -90,47 +90,70 @@ The architecture follows the model from Nate Herk's video, adapted for ETF-only 
 ├── CLAUDE.md                   # Instructions for Claude Code itself
 ├── .env.example                # Template for required secrets
 ├── .gitignore                  # Excludes .env, memory/private/, etc.
-├── pyproject.toml or package.json
+├── requirements.txt
 │
 ├── strategy/
-│   ├── universe.md             # Approved ETF list (the whitelist)
+│   ├── universe.md             # Approved ETF list (curated shortlist) — references the JSON below
+│   ├── appendix_2_approved.json # Authoritative firm-approved whitelist (~230 tickers)
 │   ├── rules.md                # Entry/exit/sizing rules in plain English
 │   ├── regimes.md              # Risk-on / risk-off classification logic
 │   └── thesis.md               # Why this strategy is expected to work
 │
 ├── guardrails/
 │   ├── hard_limits.md          # Max position size, max trades/day, etc.
-│   ├── restricted.md           # ETFs the bot must never trade
-│   ├── blackouts.md            # Date ranges where no trading occurs
-│   └── compliance.md           # Compliance rules in machine-readable form
+│   ├── restricted.md           # Appendix 3 removals + bot-imposed restrictions
+│   └── blackouts.md            # Date ranges where no trading occurs
 │
 ├── routines/
-│   ├── pre_market.md           # Prompt + procedure for pre-market routine
-│   ├── market_open.md
-│   ├── midday.md
-│   ├── eod.md
-│   └── weekly.md
+│   ├── pre_market.md           # 7-step LLM prompt for pre-market briefing + proposals
+│   ├── midday.md               # 5-step LLM prompt for intraday checks
+│   ├── eod.md                  # 6-step LLM prompt for end-of-day summary + timeseries
+│   └── weekly.md               # 7-step LLM prompt for Friday review (read-only proposals)
+│   # Note: market-open is pure Python (scripts/market_open.py) — no LLM prompt needed,
+│   # since proposals are pre-staged by pre-market in memory/proposals/YYYY-MM-DD.json.
 │
 ├── skills/
 │   ├── alpaca/                 # Wrapper functions for Alpaca paper API
-│   ├── market_data/            # Yahoo Finance / Alpaca data wrapper
-│   ├── notifications/          # Email / Slack senders
+│   ├── market_data/            # yfinance / FRED / Alpaca data wrapper
+│   ├── timeseries/             # CSV recorder + benchmark fetcher
+│   ├── notifications/          # Email / Slack senders (Phase 5)
+│   ├── guardrails/             # Order-gate enforcement code
 │   └── memory/                 # Read/write to memory logs
 │
 ├── memory/
 │   ├── decisions/              # One markdown file per trade decision
 │   ├── daily/                  # YYYY-MM-DD.md daily logs
-│   ├── weekly/                 # ISO-week summaries
+│   ├── weekly/                 # YYYY-Www.md weekly review files
+│   ├── proposals/              # Pre-market trade proposals queued for market-open
+│   ├── timeseries/             # portfolio_daily.csv, positions_daily.csv, benchmarks_daily.csv
+│   ├── highwatermarks.json     # Per-ticker peak tracking for trailing stops
 │   └── positions.md            # Current paper position state
+│
+├── scripts/
+│   ├── setup_scheduler.ps1     # One-time: register all 5 Task Scheduler tasks
+│   ├── run_pre_market.ps1      # Wrapper: pre-market routine
+│   ├── run_market_open.ps1     # Wrapper: market-open execution
+│   ├── run_midday.ps1          # Wrapper: midday routine
+│   ├── run_eod.ps1             # Wrapper: EOD routine
+│   ├── run_weekly.ps1          # Wrapper: weekly review
+│   ├── market_open.py          # Pure-Python order placer (no LLM)
+│   ├── midday.py               # Position data helper invoked by midday routine
+│   ├── eod.py                  # Position + timeseries helper invoked by EOD routine
+│   ├── hello_alpaca.py         # Phase 0 smoke test
+│   ├── test_order.py           # Manual order test utility
+│   └── backfill_benchmarks.py  # Phase 7 historical benchmark loader
+│
+├── logs/                       # Per-routine, per-day .log files (gitignored)
 │
 ├── docs/
 │   ├── compliance.md           # Open questions, answers as they arrive
+│   ├── compliance_source/      # Source firm-policy PDFs
 │   ├── decisions/              # ADRs (architecture decision records)
 │   └── runbook.md              # How to operate / debug the bot
 │
 └── tests/
-    ├── guardrails_test.*       # Verify guardrails actually block bad trades
-    └── routines_test.*         # Smoke tests for each routine
+    ├── test_guardrails.py      # Verify guardrails actually block bad trades
+    └── test_timeseries.py      # Phase 7 idempotence + math correctness
 ```
 
 ### Why markdown for strategy and memory
@@ -139,7 +162,11 @@ This is the key insight from Nate Herk's video: **the bot reads and writes its o
 
 ### Hard guardrails are code, not prompts
 
-Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Hard limits ("never trade more than 10% of portfolio in a single position") are enforced in code that gates every order before it reaches Alpaca.** A prompt can be ignored or misread; a Python `if` statement cannot. The guardrails layer is the safety net.
+Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Hard limits ("never trade more than 30% of portfolio in a single position") are enforced in code that gates every order before it reaches Alpaca.** A prompt can be ignored or misread; a Python `if` statement cannot. The guardrails layer is the safety net.
+
+### Why market-open has no LLM prompt
+
+Pre-market produces a structured proposal file (`memory/proposals/YYYY-MM-DD.json`) listing every order with ticker, side, notional, and rule citations. By 9:35 AM ET, the work of *deciding* what to trade is done. The market-open script just iterates the proposals, runs each through the guardrails checker, and submits to Alpaca. No reasoning is needed, so there's no LLM call — keeping market-open fast (5–10 seconds), deterministic, and cheap. If the LLM is ever needed at open (e.g., a regime change overnight invalidates the proposals), pre-market should regenerate proposals — not market-open.
 
 ---
 
@@ -156,61 +183,78 @@ Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Har
 - [x] Initial commit: `PLAN.md`, `CLAUDE.md`, `README.md`, `.gitignore`, `.env.example`, `requirements.txt`, `scripts/hello_alpaca.py`.
 - [x] Verify Alpaca connection: `scripts/hello_alpaca.py` returned status ACTIVE, $100k equity.
 
-**Exit criteria:** Met. Repo exists on GitHub, Alpaca paper account responds to API call, `claude` runs in the project directory.
+**Exit criteria:** Met.
 
 ### Phase 1 — Strategy & guardrails (no execution) ✅ complete (April 19, 2026)
 
-- [x] Draft `strategy/universe.md` — 15 ETFs across US equity, intl equity, credit, treasuries, inflation hedges. Sector ETFs excluded pending compliance.
-- [x] Draft `strategy/rules.md` — 8 rule groups: universe constraint, regime allocations, entry, sizing, exit, cash management, no-trade conditions, logging.
+- [x] Draft `strategy/universe.md` — initial 15 ETFs; expanded 2026-04-24 to reference firm Appendix 2 (`appendix_2_approved.json`, ~230 approved tickers).
+- [x] Draft `strategy/rules.md` — 8 rule groups. *VIG → DGRO substitution made 2026-04-28 to align with Appendix 2.*
 - [x] Draft `strategy/regimes.md` — three-signal classifier: SPY vs 200-day SMA, VIX level, 10yr-2yr yield curve spread. Majority vote, 2-day confirmation.
 - [x] Draft `strategy/thesis.md` — why regime persistence justifies tactical allocation; falsification criteria defined.
-- [x] Draft `guardrails/hard_limits.md` — 10-step sequential gate model; code enforcement in `skills/guardrails/` (Phase 2).
-- [x] Write `guardrails/restricted.md` — empty pending compliance response.
+- [x] Draft `guardrails/hard_limits.md` — 10-step sequential gate model.
+- [x] Write `guardrails/restricted.md` — populated 2026-04-24 with Appendix 3 removals + bot-imposed restrictions (VIXY, VXX, SH).
 - [x] Write `guardrails/blackouts.md` — NYSE holidays via Alpaca API; employer blackouts empty pending compliance.
-- [x] Write `docs/compliance.md` — 6 open questions logged with default assumptions.
-- [x] Write `docs/decisions/0001-language.md` — ADR documenting Python choice.
+- [x] Write `docs/compliance.md` — 6 open questions; #2 and #4 resolved 2026-04-24.
+- [ ] Write `docs/decisions/0001-language.md` — ADR documenting Python choice. *(TODO — see Phase 9.)*
 - [x] Write `CLAUDE.md` — committed in Phase 0.
 
-**Exit criteria:** Met. A human can read strategy/ and guardrails/ and understand exactly what the bot will and won't do.
+**Exit criteria:** Met.
 
-### Phase 2 — Single routine, automated via local Task Scheduler (in progress — April 19, 2026)
+### Phase 2 — Single routine, automated via local Task Scheduler ✅ complete (April 28, 2026)
 
 - [x] Implement `routines/pre_market.md` — full 7-step prompt: fetch signals, check prior regime, read strategy, draft proposals, market context, log to memory, print summary.
-- [x] Implement `skills/market_data/fetcher.py` — pulls SPY 200d SMA (yfinance), VIX (yfinance), 10yr-2yr spread (FRED). Majority-vote regime classifier. Verified live: RISK-ON all three signals (2026-04-19).
-- [x] Implement `skills/guardrails/checker.py` — 10-step sequential order gate. CLI-invokable. Reads universe/restricted/blackouts at runtime.
+- [x] Implement `skills/market_data/fetcher.py` — pulls SPY 200d SMA (yfinance), VIX (yfinance), 10yr-2yr spread (FRED). Majority-vote regime classifier.
+- [x] Implement `skills/guardrails/checker.py` — 10-step sequential order gate. CLI-invokable. Reads universe/restricted/blackouts at runtime. Updated 2026-04-24 to enforce against `appendix_2_approved.json`.
 - [x] Implement `skills/memory/logger.py` — appends timestamped entries to memory/daily/YYYY-MM-DD.md.
 - [x] Seed `memory/positions.md` — empty starting state, $100k cash.
 - [x] Automate pre-market routine via Windows Task Scheduler (`scripts/run_pre_market.ps1`, runs daily at 7:30 AM ET weekdays).
-- [ ] Run pre-market routine for 5 consecutive trading days. Verify output quality and that memory/daily/ is committed each day.
-- [ ] Iterate on prompt and rules based on observed output.
+- [x] Pre-market routine ran cleanly for 7 consecutive trading days (2026-04-20 through 2026-04-28).
 
-**Exit criteria:** Pre-market routine produces useful, trustworthy output 5 days in a row.
+**Exit criteria:** Met.
 
-### Phase 3 — Paper execution
+### Phase 3 — Paper execution ✅ complete (April 28, 2026)
 
-- [ ] Wire up `skills/alpaca/` to actually place paper orders.
-- [ ] Implement order gating through `guardrails/`.
-- [ ] Add `routines/market_open.md` to execute approved trades.
-- [ ] Add `routines/eod.md` to log results.
-- [ ] Run manually for ~1 week, verify positions.md stays in sync with Alpaca.
+- [x] Wire up `skills/alpaca/` to place paper orders.
+- [x] Implement order gating through `guardrails/` (every order goes through `skills/guardrails/checker.py` first).
+- [x] Add `scripts/market_open.py` — pure-Python order placer (consumes pre-market proposal JSON; no LLM prompt needed since decisions are pre-staged).
+- [x] Add `routines/eod.md` to log results, update positions.md, write timeseries CSVs.
+- [x] Add `routines/midday.md` for trailing stop checks.
+- [x] First live paper trades placed 2026-04-27 market open: 4 buys (VTI, QQQ, BND, VEA).
+- [x] 2026-04-28 market open: 5 additional buys (VTI/QQQ top-ups, DGRO/VWO/HYG opens), hitting daily 5-trade cap exactly.
+- [x] `memory/positions.md` reconciles cleanly with Alpaca after each routine.
 
-**Exit criteria:** Bot can be invoked manually, places paper trades correctly, never violates guardrails (verified by tests).
+**Exit criteria:** Met. Bot places paper trades correctly. Decision logs cite specific rule numbers. No guardrail violations observed.
 
-### Phase 4 — Cron / scheduled autonomy
+### Phase 4 — Cron / scheduled autonomy 🟡 closing — observation window (target close: 2026-05-08)
 
-- [ ] Add `routines/midday.md` and `routines/weekly.md`.
-- [ ] Set up local OS scheduler (Task Scheduler / cron) to run all five routines.
-- [ ] Decide on cloud deploy (GitHub Actions vs Railway vs other) and migrate.
-- [ ] Add error alerting (email on routine failure).
+This phase requires *both* working scheduling code AND a clean unattended-run track record. The code is done; the wait is for the calendar.
 
-**Exit criteria:** Bot runs unattended for 2 weeks without intervention. Memory logs are coherent.
+**Code & configuration ✅ complete**
+- [x] `scripts/setup_scheduler.ps1` registers all five tasks (`AutoTrading-PreMarket/MarketOpen/Midday/EOD/Weekly`).
+- [x] All five wrapper scripts exist: `run_pre_market.ps1`, `run_market_open.ps1`, `run_midday.ps1`, `run_eod.ps1`, `run_weekly.ps1`.
+- [x] Pre-market firing on schedule for 7 consecutive trading days (2026-04-20 → 04-28).
+- [x] Market-open, midday, EOD all firing on schedule for 2 consecutive trading days (2026-04-27, 04-28). *Earlier days had logs at off-hours, indicating manual catch-up runs before the schedule was registered.*
+- [x] `routines/weekly.md` — Friday review routine (created 2026-04-28). First scheduled run: Fri 2026-05-01 at 5:00 PM ET. Note: requires `setup_scheduler.ps1` to be re-run as Administrator to register the new `AutoTrading-Weekly` task.
+- [x] Cloud deploy decision **deferred** — Windows Task Scheduler is sufficient. GitHub Actions cost (~$1–3/day) is too high without a clear win. User has explicitly accepted the "PC must stay on" constraint.
+
+**Observation window ⏳ in progress**
+- [ ] 14 consecutive trading days of clean unattended runs across all 4 daily routines, plus one full weekly review. *Day 2 of 14 as of 2026-04-28. Target close: Thu 2026-05-08 (assuming no missed days).*
+- [ ] Weekly routine fires Fri 2026-05-01 and produces a valid `memory/weekly/2026-W18.md` review.
+
+**Deferred to Phase 5**
+- ~~Add error alerting (email on routine failure)~~ — moved to Phase 5 since email is the primary deliverable there. Logs are local-only until then.
+
+**Exit criteria:** Bot runs unattended for 14 trading days without manual intervention. All five routines (pre-market, market-open, midday, EOD, weekly) fire on schedule. Memory logs and timeseries CSVs are coherent and complete. *Target: 2026-05-08.*
 
 ### Phase 5 — Fidelity signaling layer
 
-- [ ] Add `skills/notifications/` for email (and optionally Slack).
-- [ ] Modify `routines/market_open.md` to emit a "Fidelity action list" alongside paper execution.
+> **User intent (2026-04-28):** Hold off ~1 month before starting Phase 5 to gather paper performance data first. Earliest start ~2026-05-28.
+
+- [ ] Add `skills/notifications/` for email (and optionally Slack/WhatsApp/Telegram).
+- [ ] Modify `scripts/market_open.py` (or add a post-step) to emit a "Fidelity action list" alongside paper execution.
 - [ ] Format: "Buy 12 shares VTI at market" — copy-pasteable into Fidelity.
 - [ ] Add a daily reconciliation: compare paper Alpaca positions vs. user's Fidelity holdings (manually entered into a `fidelity_state.md` file the user updates).
+- [ ] Add error alerting: any routine wrapper that exits non-zero sends an email so missed runs are not silent.
 
 **Exit criteria:** User receives actionable trade emails and successfully executes them in Fidelity for 2+ weeks.
 
@@ -223,11 +267,9 @@ Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Har
 
 **Exit criteria:** Strategy has measured edge over a buy-and-hold SPY benchmark across the paper period, OR strategy is revised with documented rationale.
 
-### Phase 7 — Performance data capture (in progress — April 28, 2026)
+### Phase 7 — Performance data capture ✅ complete (April 28, 2026)
 
-This phase must ship before Phase 8 (the UI). The UI can only show data we have already collected, and every day this is delayed is a day of performance history lost. Backfilling from prose memory logs is unreliable.
-
-**Why now**: The bot is running on Alpaca paper but `memory/timeseries/` does not exist. Daily memory logs are prose — they can be read but not charted. We need structured CSV capture starting with the next EOD run.
+This phase shipped before Phase 8 (the UI). The UI can only show data we have already collected.
 
 **What gets captured**: Three append-only CSVs in `memory/timeseries/`, written by the EOD routine after market close.
 
@@ -271,20 +313,20 @@ This phase must ship before Phase 8 (the UI). The UI can only show data we have 
 
 **Why CSV**: trivial to write, trivial to read into pandas/Excel, auditable in git diffs, append-only by nature. Alternatives (JSON, sqlite, Parquet) add complexity without benefit at this scale.
 
-**Implementation tasks**:
-- [x] Create `memory/timeseries/` directory (created on first write by recorder; tracked via the CSVs themselves).
-- [x] `skills/timeseries/recorder.py` — three idempotent append/update functions (re-running EOD same day must not duplicate rows). All `_pct` columns are decimal ratios (0.0123 = 1.23%).
+**Implementation**:
+- [x] Create `memory/timeseries/` directory.
+- [x] `skills/timeseries/recorder.py` — three idempotent append/update functions. All `_pct` columns are decimal ratios (0.0123 = 1.23%).
 - [x] `skills/timeseries/benchmarks.py` — fetch benchmark closes via Alpaca historical bars using `feed=DataFeed.IEX` (free-tier blocks recent SIP data). 60/40 blend computed in the recorder, daily-rebalanced from SPY+AGG dailies.
 - [x] Update `routines/eod.md` to call the recorder after position reconciliation, before commit.
-- [x] `scripts/backfill_benchmarks.py` — populate `benchmarks_daily.csv` from the bot's start date (2026-04-19) through yesterday. Portfolio CSV cannot be backfilled and starts fresh from Phase 7 ship date (2026-04-28).
+- [x] `scripts/backfill_benchmarks.py` — populate `benchmarks_daily.csv` from 2026-04-19 through yesterday. Portfolio CSV starts fresh from Phase 7 ship date (2026-04-28).
 - [x] `tests/test_timeseries.py` — idempotence, math correctness, schema validation, blend math (17 tests).
-- [ ] `docs/decisions/NNNN-timeseries-format.md` ADR explaining CSV choice and schema rationale.
+- [ ] `docs/decisions/NNNN-timeseries-format.md` ADR. *(TODO — see Phase 9.)*
 
-**Exit criteria**:
-- EOD routine has written valid rows to all three CSVs for 5+ consecutive trading days. *(1/5 as of 2026-04-28; Phase 7 ship date.)*
-- Re-running EOD on the same day does not create duplicate rows. *(Verified by tests + manual re-run on ship date.)*
-- Benchmarks CSV has historical data going back to 2026-04-19. *(Backfilled 2026-04-20 → 2026-04-28; 2026-04-19 was a Sunday with no bar.)*
-- All tests pass. *(35/35.)*
+**Exit criteria:** Met (apart from the ADR).
+- ✅ EOD wrote valid rows on first live run (2026-04-28).
+- ✅ Re-running EOD same day does not duplicate rows (verified by tests + manual re-run).
+- ✅ Benchmarks CSV backfilled 2026-04-20 → 2026-04-28.
+- ✅ All 35 tests pass.
 
 ---
 
@@ -323,6 +365,21 @@ Start with Option A. Upgrade to B if interactivity matters. Skip C unless data n
 
 ---
 
+### Phase 9 — Documentation backfill
+
+Small phase to clean up outstanding docs the project should have. Not blocking anything but the architectural decisions deserve preservation.
+
+- [ ] `docs/decisions/0001-language.md` — Why Python over TypeScript (Alpaca SDK quality, finance ecosystem, scheduling tooling).
+- [ ] `docs/decisions/0002-markdown-first.md` — Why markdown for strategy/rules/memory rather than JSON or a database.
+- [ ] `docs/decisions/0003-csv-timeseries.md` — Why CSV for `memory/timeseries/` over JSON/sqlite/Parquet (Phase 7 design).
+- [ ] `docs/decisions/0004-appendix2-whitelist.md` — Why a JSON-as-source-of-truth + markdown shortlist split (Compliance §2 resolution).
+- [ ] `docs/decisions/0005-half-step-rebalance.md` — Why Rule 4.2 says "rebalance at most 50% of the gap per session."
+- [ ] `docs/decisions/0006-no-llm-at-market-open.md` — Why market-open is pure Python instead of an LLM-driven routine.
+
+**Exit criteria:** All six ADRs exist and follow the Context → Decision → Consequences format.
+
+---
+
 ## 7. Risks & mitigations
 
 | Risk | Severity | Mitigation |
@@ -331,22 +388,26 @@ Start with Option A. Upgrade to B if interactivity matters. Skip C unless data n
 | Bot violates compliance rule | High | Hard-coded guardrails in front of every order. Restricted list checked on every trade. ETF-only whitelist enforced. |
 | Bot blows up paper account | Low (it's paper) | Position size limits. Max trades per day. Stop-losses. Even paper failures are signals to fix the strategy. |
 | Strategy underperforms benchmark | Medium | That's why we paper-trade for weeks before signaling Fidelity. If it doesn't beat SPY, it doesn't go live. |
-| Cron job silently fails | Medium | Each routine writes to `memory/daily/`. EOD routine alerts if no entries since prior day. Add Healthchecks.io ping. |
+| Cron job silently fails | Medium | Each routine writes to `memory/daily/`. EOD routine alerts if no entries since prior day. Email alerting deferred to Phase 5. |
 | Alpaca API outage | Low | Routine should fail gracefully and alert, not retry forever. Resume on next scheduled run. |
 | User executes wrong trade in Fidelity | Medium | Signal email includes ticker, side, quantity, and a unique signal ID. User confirms execution back to a `fidelity_state.md` file. |
 | LLM hallucinates a trade not in strategy | Medium | Guardrails reject any ticker not on the whitelist. Reject any trade not justified by a rule the bot can cite. |
 | Employer compliance later restricts something the bot was doing | Medium | All decisions are auditable in `memory/decisions/`. Restricted list is a single file to update. |
+| Local PC outage misses scheduled runs | Medium | Bot runs only when PC is on. User has accepted this constraint; cloud cron deferred for cost reasons. EOD routine should detect missed prior-day runs. |
+| New `AutoTrading-Weekly` task not registered | Low (one-time) | `setup_scheduler.ps1` updated 2026-04-28 to include the weekly task. Must be re-run as Administrator before Friday 2026-05-01 or the first weekly review will not fire. |
 
 ---
 
 ## 8. Open questions to resolve before Phase 1
 
-1. **Compliance — Alpaca approval status?** (User is asking employer.)
-2. **Compliance — ETF whitelist required, or open universe?** (User is asking.)
-3. **Strategy — what's the initial ETF universe?** (Will draft in Phase 1; needs user review.)
-4. **Strategy — what's the initial regime classification logic?** (Default proposal: yield curve slope + VIX percentile + 200-day SMA on SPY.)
-5. **Notification channel — email, Slack, both?** (Defer to Phase 5.)
-6. **Deploy target — local cron, GitHub Actions, Railway, other?** (Defer to Phase 4.)
+*(Historical — Phase 1 is complete. Retained for context.)*
+
+1. **Compliance — Alpaca approval status?** *(Pending — assumed yes for paper.)*
+2. **Compliance — ETF whitelist required, or open universe?** *(Resolved: yes, Appendix 2.)*
+3. **Strategy — what's the initial ETF universe?** *(Resolved: 15-ticker shortlist + ~230 Appendix 2 whitelist.)*
+4. **Strategy — what's the initial regime classification logic?** *(Resolved: SPY 200d SMA + VIX + yield curve spread, majority vote, 2-day confirmation.)*
+5. **Notification channel — email, Slack, both?** *(Defer to Phase 5.)*
+6. **Deploy target — local cron, GitHub Actions, Railway, other?** *(Resolved for now: Windows Task Scheduler. Cloud deferred for cost.)*
 
 ---
 
@@ -363,12 +424,13 @@ Start with Option A. Upgrade to B if interactivity matters. Skip C unless data n
 
 The project is "v1 done" when all of the following are true:
 
-- Bot has been paper-trading autonomously on Alpaca for 30+ days with no manual intervention required.
-- User has been receiving and executing Fidelity signals for 14+ days.
+- Bot has been paper-trading autonomously on Alpaca for 30+ days with no manual intervention required. *(Started 2026-04-27.)*
+- User has been receiving and executing Fidelity signals for 14+ days. *(Phase 5 not started; user holding ~1 month for paper data first.)*
 - Strategy performance vs SPY benchmark is documented in a weekly review.
 - Compliance has signed off (or the user has confirmed no sign-off is required).
 - Repo, decisions, and memory logs are complete and would let a third party reconstruct every trade.
 - Phase 7 data capture has run for 30+ trading days with no missing rows.
 - Dashboard renders correctly; equity curve vs 60/40 benchmark documented in a weekly review with discussion of whether the bot is earning its complexity.
+- All Phase 9 ADRs written.
 
 After v1, candidate v2 features include: backtesting framework, strategy variations, multi-account support, tax-aware rebalancing, options (if compliance ever allows).

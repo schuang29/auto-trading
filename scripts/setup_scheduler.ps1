@@ -3,7 +3,7 @@
 #   powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\setup_scheduler.ps1"
 #
 # Safe to re-run: -Force overwrites existing task registrations without error.
-# Tasks registered: AutoTrading-PreMarket, AutoTrading-MarketOpen, AutoTrading-Midday, AutoTrading-EOD
+# Tasks registered: AutoTrading-PreMarket, AutoTrading-MarketOpen, AutoTrading-Midday, AutoTrading-EOD, AutoTrading-Weekly
 
 $ProjectRoot = "C:\Users\schua\Personal\Projects\auto-trading"
 
@@ -99,6 +99,28 @@ Register-ScheduledTask `
     -Force
 
 Write-Host "Registered: AutoTrading-EOD (4:15 PM)"
+
+# ── Weekly review: 5:00 PM ET, Fridays only ──────────────────────────────────
+$action = New-ScheduledTaskAction `
+    -Execute "powershell.exe" `
+    -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ProjectRoot\scripts\run_weekly.ps1`"" `
+    -WorkingDirectory $ProjectRoot
+
+$trigger = New-ScheduledTaskTrigger `
+    -Weekly `
+    -DaysOfWeek Friday `
+    -At "5:00PM"
+
+Register-ScheduledTask `
+    -TaskName "AutoTrading-Weekly" `
+    -Action $action `
+    -Trigger $trigger `
+    -Settings $settings `
+    -Description "ETF trading bot weekly review - 5:00 PM ET Fridays (after EOD)" `
+    -RunLevel Highest `
+    -Force
+
+Write-Host "Registered: AutoTrading-Weekly (Fri 5:00 PM)"
 
 Write-Host ""
 Write-Host "All tasks registered. Verify in Task Scheduler (taskschd.msc)."

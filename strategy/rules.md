@@ -18,13 +18,15 @@
 
 Target allocations are guidelines. Actual orders are sized to move toward the target, not to hit it exactly in one trade (see Rule 4 on position sizing).
 
+> **Note (2026-04-28):** VIG was the original dividend-growth slot but is not on firm Appendix 2 (the approved trading list). DGRO (iShares Core Dividend Growth) is the policy-approved substitute and serves the same role — large-cap US dividend growth, lower volatility tilt. See `strategy/universe.md` for the full approved list and `guardrails/restricted.md` for explicitly blocked tickers.
+
 ### RISK-ON target portfolio
 
 | Ticker | Target weight |
 |--------|--------------|
 | VTI | 32.5% |
 | QQQ | 17.5% |
-| VIG | 10% |
+| DGRO | 10% |
 | VEA | 10% |
 | VWO | 5% |
 | HYG | 5% |
@@ -37,7 +39,7 @@ Target allocations are guidelines. Actual orders are sized to move toward the ta
 | Ticker | Target weight |
 |--------|--------------|
 | VTI | 20% |
-| VIG | 10% |
+| DGRO | 10% |
 | VEA | 5% |
 | BND | 25% |
 | IEF | 20% |
@@ -65,7 +67,7 @@ Target allocations are guidelines. Actual orders are sized to move toward the ta
 
 **Rule 3.3** — Use market orders for all entries and exits. ETFs on this list are liquid enough that limit orders are not necessary for the size we trade.
 
-**Rule 3.4** — Do not open a new position in a ticker if the current paper holding period for that ticker is less than 30 days, unless a regime change requires it. This respects the assumed 30-day holding period compliance constraint.
+**Rule 3.4** — Do not open a new position in a ticker if the current paper holding period for that ticker is less than 30 days, unless a regime change requires it. This respects the assumed 30-day holding period compliance constraint. *Topping up an already-open position is not "opening a new position" and is permitted.*
 
 ---
 
