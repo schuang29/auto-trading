@@ -380,6 +380,49 @@ Small phase to clean up outstanding docs the project should have. Not blocking a
 
 ---
 
+### Phase 10 — Strategy diversification (deferred until ~June 2026)
+
+> Placeholder. Do not implement until Phase 4 has closed AND at least 30 trading days of clean performance data exist for the primary regime strategy. The right second strategy depends on the failure mode of the first one — pick the strategy that addresses the specific weakness observed, not the one that sounds best in the abstract.
+
+**Rationale for adding a second strategy at all:** Two uncorrelated strategies each returning 5% are better than one returning 7% — combined volatility drops, drawdowns shrink. But each new strategy adds operational complexity, monitoring burden, and capital fragmentation. Add at most one parallel strategy, and only after the primary has demonstrated either edge or a clear weakness to address.
+
+**Candidate strategies** (in priority order, all ETF-only and Appendix 2-compatible):
+
+1. **Dual momentum (Antonacci variant)** — Two-step screen: own SPY only if its 12-month return beats T-bills (absolute momentum); between US and international equity, own whichever has stronger 12-month return (relative momentum); else hold AGG. Three positions ever held. Simplest to implement (~60 lines + rules markdown). Lowest operational complexity. Low turnover (monthly rebalance). Strong historical record though may have weakened post-publication.
+
+2. **Sector / asset-class momentum rotation** — Rank a 9-ETF universe (SPY, QQQ, IWM, EFA, VWO, AGG, TLT, GLD, GSG) by 6 or 12-month total return; hold top 2-3, rotate when rankings change. Adds a momentum signal type that complements the regime classifier's macro signals. Higher turnover — may bind against the assumed 30-day holding period.
+
+3. **Risk parity (All Weather variant)** — Static allocation balancing risk contribution rather than capital across stocks/bonds/gold (~30/50/20 typical). Rebalance quarterly. Could be implemented as a third "REGIME = UNCERTAIN" allocation in the existing rules rather than a parallel system. Tickers already in the curated shortlist.
+
+**Strategies considered and rejected:**
+- Politician trade copying (NANC/KRUZ et al.): Politicians trade individual stocks and options — both prohibited. Tracker ETFs not on Appendix 2. Compliance optics. See conversation 2026-04-28.
+- Pairs trading / mean reversion: Requires shorting (prohibited).
+- Trend-following on broad assets: Mechanically similar to existing regime classifier — limited diversification benefit.
+- Macro thematic (AI, clean energy, etc.): Concentrated single-bet wrapped as a "strategy" — effectively just stock-picking with extra steps.
+- Buy-write / covered call income: Compliance prohibits selling options. Wrapped versions (JEPI, JEPQ, GPIX) are on Appendix 2 but better treated as positions in an income tilt, not a parallel strategy.
+- Smart-beta factor strategies (value, quality, low-vol): Better expressed as tilts within the existing regime allocation, not parallel systems.
+
+**Volatility targeting** is worth considering but is an *overlay* (rule modification) on the existing strategy, not a parallel strategy. Same for adding factor tilts — these are rule changes, not new architectures.
+
+**Decision framework before adding:**
+- Run primary strategy through May 2026 with no changes
+- In each weekly review, characterize the failure mode: was the bot too slow, did it whipsaw, did it lag in trends, did the 60/40 blend beat it consistently?
+- Pick the candidate that addresses the observed failure mode
+- Allocate at most 30% of portfolio to the second strategy initially
+- Run with separate `strategy/<name>/` folder, separate `memory/timeseries/` columns, separate decision logs
+
+**Implementation plan when triggered:**
+- [ ] ADR documenting which strategy chosen and why (`docs/decisions/00NN-second-strategy.md`)
+- [ ] New `strategy/<name>/` directory mirroring the structure of the primary
+- [ ] Decide capital split. Default: 70% primary / 30% secondary
+- [ ] Extend `memory/positions.md` and timeseries CSVs with strategy attribution
+- [ ] Extend the weekly review to compare strategies head-to-head
+- [ ] Update guardrails to enforce per-strategy limits (no single position > 30% of *total* equity, regardless of which strategy)
+
+**Exit criteria:** Second strategy runs in parallel for 30+ trading days. Weekly reviews compare both. Performance attribution is unambiguous.
+
+---
+
 ## 7. Risks & mitigations
 
 | Risk | Severity | Mitigation |
@@ -434,3 +477,5 @@ The project is "v1 done" when all of the following are true:
 - All Phase 9 ADRs written.
 
 After v1, candidate v2 features include: backtesting framework, strategy variations, multi-account support, tax-aware rebalancing, options (if compliance ever allows).
+
+**Post-v1 candidates:** Phase 10 (strategy diversification) is explicitly deferred until after v1 — see Phase 10 for candidate strategies and decision framework.
