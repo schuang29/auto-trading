@@ -41,6 +41,9 @@ class TestEodDryRun:
     def test_empty_portfolio_produces_zero_pl(self, tmp_path, monkeypatch):
         monkeypatch.setattr(eod, "HWM_FILE", tmp_path / "hwm.json")
         monkeypatch.setattr(eod, "POSITIONS_FILE", tmp_path / "positions.md")
+        monkeypatch.setattr(eod, "PORTFOLIO_CSV", tmp_path / "portfolio_daily.csv")
+        monkeypatch.setattr(eod, "POSITIONS_CSV", tmp_path / "positions_daily.csv")
+        monkeypatch.setattr(eod, "BENCHMARKS_CSV", tmp_path / "benchmarks_daily.csv")
 
         with patch("skills.alpaca.get_account", return_value=make_account()), \
              patch("skills.alpaca.get_positions", return_value=[]):
@@ -53,6 +56,9 @@ class TestEodDryRun:
     def test_position_with_gain_no_stop(self, tmp_path, monkeypatch):
         monkeypatch.setattr(eod, "HWM_FILE", tmp_path / "hwm.json")
         monkeypatch.setattr(eod, "POSITIONS_FILE", tmp_path / "positions.md")
+        monkeypatch.setattr(eod, "PORTFOLIO_CSV", tmp_path / "portfolio_daily.csv")
+        monkeypatch.setattr(eod, "POSITIONS_CSV", tmp_path / "positions_daily.csv")
+        monkeypatch.setattr(eod, "BENCHMARKS_CSV", tmp_path / "benchmarks_daily.csv")
 
         pos = make_position(current_price=255.0, avg_cost=250.0, unrealized_pl=300.0)
         with patch("skills.alpaca.get_account", return_value=make_account()), \
@@ -66,6 +72,9 @@ class TestEodDryRun:
     def test_trailing_stop_triggers_at_15pct_drawdown(self, tmp_path, monkeypatch):
         monkeypatch.setattr(eod, "HWM_FILE", tmp_path / "hwm.json")
         monkeypatch.setattr(eod, "POSITIONS_FILE", tmp_path / "positions.md")
+        monkeypatch.setattr(eod, "PORTFOLIO_CSV", tmp_path / "portfolio_daily.csv")
+        monkeypatch.setattr(eod, "POSITIONS_CSV", tmp_path / "positions_daily.csv")
+        monkeypatch.setattr(eod, "BENCHMARKS_CSV", tmp_path / "benchmarks_daily.csv")
 
         # Pre-seed HWM at 100 so current price of 84 = -16% drawdown
         hwm_data = {"VTI": {"hwm": 100.0, "hwm_date": "2026-04-20", "entry_date": "2026-04-20"}}
@@ -83,6 +92,9 @@ class TestEodDryRun:
     def test_trailing_stop_does_not_trigger_at_14pct_drawdown(self, tmp_path, monkeypatch):
         monkeypatch.setattr(eod, "HWM_FILE", tmp_path / "hwm.json")
         monkeypatch.setattr(eod, "POSITIONS_FILE", tmp_path / "positions.md")
+        monkeypatch.setattr(eod, "PORTFOLIO_CSV", tmp_path / "portfolio_daily.csv")
+        monkeypatch.setattr(eod, "POSITIONS_CSV", tmp_path / "positions_daily.csv")
+        monkeypatch.setattr(eod, "BENCHMARKS_CSV", tmp_path / "benchmarks_daily.csv")
 
         hwm_data = {"VTI": {"hwm": 100.0, "hwm_date": "2026-04-20", "entry_date": "2026-04-20"}}
         (tmp_path / "hwm.json").write_text(json.dumps(hwm_data), encoding="utf-8")
@@ -98,6 +110,9 @@ class TestEodDryRun:
     def test_hwm_updates_on_new_high(self, tmp_path, monkeypatch):
         monkeypatch.setattr(eod, "HWM_FILE", tmp_path / "hwm.json")
         monkeypatch.setattr(eod, "POSITIONS_FILE", tmp_path / "positions.md")
+        monkeypatch.setattr(eod, "PORTFOLIO_CSV", tmp_path / "portfolio_daily.csv")
+        monkeypatch.setattr(eod, "POSITIONS_CSV", tmp_path / "positions_daily.csv")
+        monkeypatch.setattr(eod, "BENCHMARKS_CSV", tmp_path / "benchmarks_daily.csv")
 
         hwm_data = {"VTI": {"hwm": 250.0, "hwm_date": "2026-04-27", "entry_date": "2026-04-27"}}
         (tmp_path / "hwm.json").write_text(json.dumps(hwm_data), encoding="utf-8")
@@ -105,7 +120,11 @@ class TestEodDryRun:
         # Current price 260 > old HWM 250 — should update
         pos = make_position(current_price=260.0, avg_cost=250.0, market_value=15_600.0, unrealized_pl=600.0)
         with patch("skills.alpaca.get_account", return_value=make_account()), \
-             patch("skills.alpaca.get_positions", return_value=[pos]):
+             patch("skills.alpaca.get_positions", return_value=[pos]), \
+             patch(
+                 "skills.timeseries.benchmarks.get_closes_for_date",
+                 return_value={"SPY": 600.0, "AGG": 100.0, "VT": 110.0},
+             ):
             result = eod.main(dry_run=False)  # write=True to check file update
 
         saved = json.loads((tmp_path / "hwm.json").read_text(encoding="utf-8"))

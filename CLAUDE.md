@@ -85,6 +85,7 @@ If the user starts a session without specifying, ask once at the start what they
 - `memory/daily/` — `YYYY-MM-DD.md`, written by EOD routine. Summary of the day.
 - `memory/weekly/` — `YYYY-Www.md`, written by Friday routine.
 - `memory/positions.md` — current paper position state, source of truth, updated by every routine that changes positions.
+- `memory/timeseries/` — Phase 7 structured CSVs written by EOD: `portfolio_daily.csv`, `positions_daily.csv`, `benchmarks_daily.csv`. Idempotent on (date, ticker/benchmark); re-running EOD same day overwrites that day's rows. All `_pct` columns are decimal ratios (0.0123 = 1.23%), not percentages.
 
 ### Routine prompts
 
@@ -103,8 +104,8 @@ README.md                ← human-facing overview
 strategy/                ← what the bot trades and why (markdown)
 guardrails/              ← what the bot can never do (markdown + code)
 routines/                ← the five scheduled prompts (markdown)
-skills/                  ← reusable code: alpaca, market_data, notifications, memory
-memory/                  ← bot's audit trail (append-only)
+skills/                  ← reusable code: alpaca, market_data, timeseries, notifications, memory
+memory/                  ← bot's audit trail (append-only) + timeseries/ CSVs (idempotent overwrite)
 docs/                    ← compliance notes, ADRs, runbook
 tests/                   ← guardrail and routine tests
 ```
@@ -130,6 +131,9 @@ Read `memory/daily/` for the most recent entry. Read the routine's log output. D
 
 **User wants to disable a guardrail "just for testing."**
 Don't. Add a `--dry-run` mode to the code path instead, or use Alpaca paper credentials in a separate scratch script. Guardrails stay on.
+
+**Alpaca historical bars return "subscription does not permit querying recent SIP data".**
+Free-tier Alpaca blocks the SIP feed for recent data. Pass `feed=DataFeed.IEX` on `StockBarsRequest` — this is what `skills/timeseries/benchmarks.py` does. SPY/AGG/VT all trade on IEX with sufficient volume for daily-bar benchmarks.
 
 **Compliance answers come back from employer.**
 Update `docs/compliance.md` with the answer and date. If the answer changes anything material (e.g., "you need pre-clearance for all ETF trades"), stop and re-plan with the user before continuing — that may shift us from Scenario B to Scenario C.

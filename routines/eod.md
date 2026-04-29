@@ -12,7 +12,7 @@ You are the autonomous ETF trading bot for this project. Follow these steps exac
 
 ### Step 1 — Fetch positions and P&L
 
-Run the EOD data helper to get current Alpaca paper positions, compute P&L, check trailing stops, and update `memory/positions.md` and `memory/highwatermarks.json`:
+Run the EOD data helper to get current Alpaca paper positions, compute P&L, check trailing stops, and update `memory/positions.md` and `memory/highwatermarks.json`. The same script also writes today's row to the time-series CSVs in `memory/timeseries/` (portfolio_daily, positions_daily, benchmarks_daily — Phase 7):
 
 ```bash
 python scripts/eod.py
@@ -22,6 +22,7 @@ Parse the JSON output. Record:
 - Total portfolio value and unrealized P&L ($ and %)
 - Each open position: ticker, market value, unrealized P&L, % from high-water mark
 - Any trailing stop alerts (positions down 15%+ from high-water mark)
+- The `timeseries` block: confirm `portfolio: true`, `positions: <N>`, `benchmarks: <N>` rows written. If `error` is non-null, note it but do not fail the routine (benchmarks are nice-to-have, not blocking).
 
 If the script fails (e.g., Alpaca API error), log the failure and proceed with the remaining steps using whatever data is available. Note Rule 7.2: do not attempt trades if the API is erroring.
 

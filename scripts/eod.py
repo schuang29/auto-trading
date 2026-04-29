@@ -19,11 +19,15 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import skills.alpaca as alpaca
+from skills.timeseries import benchmarks, recorder
 
 ET = ZoneInfo("America/New_York")
 TRAILING_STOP_PCT = 0.15
 HWM_FILE = ROOT / "memory" / "highwatermarks.json"
 POSITIONS_FILE = ROOT / "memory" / "positions.md"
+PORTFOLIO_CSV = recorder.PORTFOLIO_CSV
+POSITIONS_CSV = recorder.POSITIONS_CSV
+BENCHMARKS_CSV = recorder.BENCHMARKS_CSV
 STARTING_EQUITY = 100_000.0
 
 
@@ -139,10 +143,38 @@ def main(dry_run: bool) -> dict:
         "dry_run": dry_run,
     }
 
+    timeseries_status = {"portfolio": False, "positions": 0, "benchmarks": 0, "error": None}
     if not dry_run:
         save_hwm(hwm)
         update_positions_md(enriched, acct, today)
 
+        positions_value = acct.equity - acct.cash
+        recorder.record_portfolio(
+            date=today,
+            equity=acct.equity,
+            cash=acct.cash,
+            positions_value=positions_value,
+            starting_equity=STARTING_EQUITY,
+            path=PORTFOLIO_CSV,
+        )
+        timeseries_status["portfolio"] = True
+        timeseries_status["positions"] = recorder.record_positions(
+            date=today,
+            positions=raw_positions,
+            portfolio_equity=acct.equity,
+            path=POSITIONS_CSV,
+        )
+        try:
+            closes = benchmarks.get_closes_for_date(
+                benchmarks.DEFAULT_BENCHMARKS, date.today()
+            )
+            timeseries_status["benchmarks"] = recorder.record_benchmarks(
+                date=today, closes=closes, path=BENCHMARKS_CSV
+            )
+        except Exception as exc:
+            timeseries_status["error"] = f"benchmark fetch failed: {exc}"
+
+    summary["timeseries"] = timeseries_status
     return summary
 
 

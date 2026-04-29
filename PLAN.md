@@ -223,7 +223,7 @@ Soft guidance ("prefer broad-market ETFs") goes in markdown the bot reads. **Har
 
 **Exit criteria:** Strategy has measured edge over a buy-and-hold SPY benchmark across the paper period, OR strategy is revised with documented rationale.
 
-### Phase 7 — Performance data capture (do this next)
+### Phase 7 — Performance data capture (in progress — April 28, 2026)
 
 This phase must ship before Phase 8 (the UI). The UI can only show data we have already collected, and every day this is delayed is a day of performance history lost. Backfilling from prose memory logs is unreliable.
 
@@ -272,19 +272,19 @@ This phase must ship before Phase 8 (the UI). The UI can only show data we have 
 **Why CSV**: trivial to write, trivial to read into pandas/Excel, auditable in git diffs, append-only by nature. Alternatives (JSON, sqlite, Parquet) add complexity without benefit at this scale.
 
 **Implementation tasks**:
-- [ ] Create `memory/timeseries/` directory with `.gitkeep`.
-- [ ] `skills/timeseries/recorder.py` — three idempotent append/update functions (re-running EOD same day must not duplicate rows).
-- [ ] `skills/timeseries/benchmarks.py` — fetch benchmark closes via Alpaca historical bars (no third-party data sources). Compute the 60/40 blend.
-- [ ] Update `routines/eod.md` to call the recorder after position reconciliation, before commit.
-- [ ] `scripts/backfill_benchmarks.py` — populate `benchmarks_daily.csv` from the bot's start date (2026-04-19) through yesterday. Portfolio CSV cannot be backfilled and starts fresh from Phase 7 ship date.
-- [ ] `tests/timeseries_test.py` — idempotence, math correctness, schema validation, blend math.
+- [x] Create `memory/timeseries/` directory (created on first write by recorder; tracked via the CSVs themselves).
+- [x] `skills/timeseries/recorder.py` — three idempotent append/update functions (re-running EOD same day must not duplicate rows). All `_pct` columns are decimal ratios (0.0123 = 1.23%).
+- [x] `skills/timeseries/benchmarks.py` — fetch benchmark closes via Alpaca historical bars using `feed=DataFeed.IEX` (free-tier blocks recent SIP data). 60/40 blend computed in the recorder, daily-rebalanced from SPY+AGG dailies.
+- [x] Update `routines/eod.md` to call the recorder after position reconciliation, before commit.
+- [x] `scripts/backfill_benchmarks.py` — populate `benchmarks_daily.csv` from the bot's start date (2026-04-19) through yesterday. Portfolio CSV cannot be backfilled and starts fresh from Phase 7 ship date (2026-04-28).
+- [x] `tests/test_timeseries.py` — idempotence, math correctness, schema validation, blend math (17 tests).
 - [ ] `docs/decisions/NNNN-timeseries-format.md` ADR explaining CSV choice and schema rationale.
 
 **Exit criteria**:
-- EOD routine has written valid rows to all three CSVs for 5+ consecutive trading days.
-- Re-running EOD on the same day does not create duplicate rows.
-- Benchmarks CSV has historical data going back to 2026-04-19.
-- All tests pass.
+- EOD routine has written valid rows to all three CSVs for 5+ consecutive trading days. *(1/5 as of 2026-04-28; Phase 7 ship date.)*
+- Re-running EOD on the same day does not create duplicate rows. *(Verified by tests + manual re-run on ship date.)*
+- Benchmarks CSV has historical data going back to 2026-04-19. *(Backfilled 2026-04-20 → 2026-04-28; 2026-04-19 was a Sunday with no bar.)*
+- All tests pass. *(35/35.)*
 
 ---
 
