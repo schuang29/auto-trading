@@ -20,12 +20,14 @@ Target allocations are guidelines. Actual orders are sized to move toward the ta
 
 > **Note (2026-04-28):** VIG was the original dividend-growth slot but is not on firm Appendix 2 (the approved trading list). DGRO (iShares Core Dividend Growth) is the policy-approved substitute and serves the same role — large-cap US dividend growth, lower volatility tilt. See `strategy/universe.md` for the full approved list and `guardrails/restricted.md` for explicitly blocked tickers.
 
+> **Note (2026-05-02):** VTI target lowered from 32.5% to 30% to align with the per-position hard cap in Rule 4.1. The previous 32.5% target was internally inconsistent — Rule 4.1's 30% cap meant VTI could never reach target, and the conflict surfaced live on 2026-05-01 when a planned VTI top-up was correctly skipped at the cap. Rather than raise the cap (which would weaken the safety net), the target was lowered. The freed 2.5 percentage points were reallocated to QQQ (17.5% → 20%), keeping the same broad US large-cap risk-on weight (50%) but with a slightly stronger growth tilt. The flagged on the W18 weekly review.
+
 ### RISK-ON target portfolio
 
 | Ticker | Target weight |
 |--------|--------------|
-| VTI | 32.5% |
-| QQQ | 17.5% |
+| VTI | 30% |
+| QQQ | 20% |
 | DGRO | 10% |
 | VEA | 10% |
 | VWO | 5% |
