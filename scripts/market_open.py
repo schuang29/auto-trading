@@ -35,7 +35,13 @@ def load_proposals(today: str) -> dict:
 
 
 def log_decision(ticker: str, side: str, notional: float, order_id: str,
-                 rule: str, regime: str, price_est: float | None, dry_run: bool) -> None:
+                 rule: str, regime: str, price_est: float | None) -> None:
+    """
+    Write a decision file for a real order. Dry-run executions intentionally
+    do NOT call this function — see W18 weekly review (2026-05-01) finding #4
+    which flagged that dry-run decision files pollute the audit trail. Dry-run
+    visibility is preserved via console output instead.
+    """
     now = datetime.now(ET)
     stamp = now.strftime("%Y-%m-%d-%H%M")
     fname = f"{stamp}-{ticker}-{side.upper()}.md"
@@ -53,7 +59,7 @@ def log_decision(ticker: str, side: str, notional: float, order_id: str,
 | Rule(s) | {rule} |
 | Regime | {regime} |
 | Price (est.) | {"N/A" if price_est is None else f"${price_est:,.2f}"} |
-| Dry run | {"YES" if dry_run else "NO"} |
+| Dry run | NO |
 """
     path.write_text(content, encoding="utf-8")
     print(f"  Decision logged -> {fname}")
@@ -111,7 +117,8 @@ def main(dry_run: bool) -> None:
     now_et = datetime.now(ET)
     print(f"\n=== Market-Open Routine - {today} {now_et.strftime('%H:%M ET')} ===")
     if dry_run:
-        print("  [DRY RUN - no real orders will be placed]\n")
+        print("  [DRY RUN - no real orders will be placed]")
+        print("  [DRY RUN - no decision files will be written; dry-runs do not pollute the audit trail]\n")
 
     data = load_proposals(today)
 
@@ -157,14 +164,14 @@ def main(dry_run: bool) -> None:
             continue
 
         if dry_run:
-            print(f"    [dry-run] Would place {side.upper()} {ticker} ${notional:,.0f}")
-            log_decision(ticker, side, notional, "DRY-RUN", rule, regime, None, dry_run=True)
+            # No decision file written for dry-runs — see log_decision() docstring.
+            print(f"    [dry-run] Would place {side.upper()} {ticker} ${notional:,.0f}  rule={rule}  regime={regime}")
             orders_placed += 1
             continue
 
         order = alpaca.place_market_order(ticker, side, notional)
         print(f"    ORDER PLACED: {order['id']} status={order['status']}")
-        log_decision(ticker, side, notional, order["id"], rule, regime, None, dry_run=False)
+        log_decision(ticker, side, notional, order["id"], rule, regime, None)
         orders_placed += 1
 
     print(f"\n{orders_placed} order(s) placed.")

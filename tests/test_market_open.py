@@ -74,7 +74,12 @@ class TestMarketOpenDryRun:
         assert result.returncode == 0
         assert "observe-only" in result.stdout.lower()
 
-    def test_dry_run_approved_order_logs_decision(self):
+    def test_dry_run_approved_order_does_not_log_decision(self):
+        """
+        Dry-runs must NOT write decision files. Per W18 weekly review (2026-05-01),
+        dry-run decision files were polluting the audit trail. Visibility is
+        preserved via console output instead. Behavior change shipped 2026-05-02.
+        """
         write_proposals({
             "date": date.today().isoformat(),
             "regime": "RISK-ON",
@@ -90,7 +95,11 @@ class TestMarketOpenDryRun:
 
         assert result.returncode == 0
         assert "dry-run" in result.stdout.lower()
-        assert len(new_files) == 1, f"Expected 1 new decision file, got {len(new_files)}"
+        # No decision file should be written for dry-runs.
+        assert len(new_files) == 0, f"Expected 0 new decision files for dry-run, got {len(new_files)}"
+        # Console output should still show the order details so dry-runs remain useful.
+        assert "VTI" in result.stdout
+        assert "would place" in result.stdout.lower() or "BUY" in result.stdout
 
     def test_guardrail_blocks_non_universe_ticker(self):
         write_proposals({

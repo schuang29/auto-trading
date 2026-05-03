@@ -9,6 +9,7 @@ Usage:
     python scripts/eod.py --dry-run   (skip file writes, still prints JSON)
 """
 import argparse
+import csv
 import json
 import sys
 from datetime import date, datetime
@@ -72,6 +73,33 @@ def update_positions_md(positions: list[dict], acct: alpaca.AccountState, today:
     lines.append(f"| Buying power | ${acct.buying_power:,.2f} |\n")
 
     POSITIONS_FILE.write_text("".join(lines), encoding="utf-8")
+
+
+def _verify_portfolio_row_landed(today: str) -> None:
+    """
+    After record_portfolio() returns, re-read the CSV and confirm today's row
+    is present. If the recorder silently failed to write (disk full, permissions,
+    transient I/O), this check will raise loudly so the routine fails visibly
+    instead of looking successful while leaving a gap in the time series.
+
+    Background: Phase 7's first day (2026-04-27) had no CSV row because the
+    recorder integration shipped on 2026-04-28. That gap was identified in the
+    W18 weekly review and the row was backfilled manually on 2026-05-02. This
+    check ensures the recorder is fully responsible for current-day rows going
+    forward — any silent recorder failure becomes a loud routine failure.
+    """
+    if not PORTFOLIO_CSV.exists():
+        raise RuntimeError(
+            f"portfolio_daily.csv does not exist at {PORTFOLIO_CSV} after EOD write — "
+            f"recorder appears to have failed silently."
+        )
+    with PORTFOLIO_CSV.open("r", encoding="utf-8", newline="") as f:
+        dates = {row["date"] for row in csv.DictReader(f)}
+    if today not in dates:
+        raise RuntimeError(
+            f"portfolio_daily.csv is missing row for {today} after EOD write — "
+            f"recorder appears to have failed silently. CSV currently has {len(dates)} rows."
+        )
 
 
 def main(dry_run: bool) -> dict:
@@ -157,6 +185,12 @@ def main(dry_run: bool) -> dict:
             starting_equity=STARTING_EQUITY,
             path=PORTFOLIO_CSV,
         )
+        # Verify the row actually landed on disk. If the recorder silently
+        # failed for any reason, we want the routine to fail loudly rather
+        # than report success with a missing CSV row. See W18 weekly review
+        # findings 2026-05-01 (Monday 04-27 row gap) for the precedent that
+        # motivated this check.
+        _verify_portfolio_row_landed(today)
         timeseries_status["portfolio"] = True
         timeseries_status["positions"] = recorder.record_positions(
             date=today,
