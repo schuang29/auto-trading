@@ -1,0 +1,12 @@
+{
+  "date": "2026-05-04",
+  "regime": "RISK-ON",
+  "confirmed": true,
+  "proposals": [
+    {"ticker": "QQQ", "side": "buy", "notional": 2258, "rule": "3.1, 2, 4.2", "priority": 1},
+    {"ticker": "BND", "side": "buy", "notional": 656, "rule": "3.1, 2, 4.2", "priority": 2},
+    {"ticker": "HYG", "side": "buy", "notional": 625, "rule": "3.1, 2, 4.2", "priority": 3},
+    {"ticker": "IEF", "side": "buy", "notional": 621, "rule": "3.1, 2, 4.2", "priority": 4},
+    {"ticker": "VWO", "side": "buy", "notional": 620, "rule": "3.1, 2, 4.2", "priority": 5}
+  ]
+}
