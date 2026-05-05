@@ -1,0 +1,35 @@
+{
+  "date": "2026-05-05",
+  "regime": "RISK-ON",
+  "confirmed": true,
+  "proposals": [
+    {
+      "ticker": "QQQ",
+      "side": "buy",
+      "notional": 1103,
+      "rule": "3.1, 2, 4.2",
+      "priority": 1
+    },
+    {
+      "ticker": "DGRO",
+      "side": "buy",
+      "notional": 629,
+      "rule": "3.1, 2, 4.2",
+      "priority": 2
+    },
+    {
+      "ticker": "VEA",
+      "side": "buy",
+      "notional": 627,
+      "rule": "3.1, 2, 4.2",
+      "priority": 3
+    },
+    {
+      "ticker": "GLD",
+      "side": "buy",
+      "notional": 626,
+      "rule": "3.1, 2, 4.2",
+      "priority": 4
+    }
+  ]
+}
