@@ -48,10 +48,9 @@ powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-
 powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\run_eod.ps1"
 ```
 
-**To register in Task Scheduler** (run PowerShell as Administrator — not yet done):
-```powershell
-# Register AutoTrading-EOD task pointing to run_eod.ps1, weekdays 4:15 PM ET
-```
+**Registered.** All scheduled tasks (including EOD) are live — see "All
+scheduled tasks" below. They are (re)registered together by
+`scripts/setup_scheduler.ps1`, which must be run **as Administrator**.
 
 ---
 
@@ -122,9 +121,16 @@ Or open the file in VS Code. The file includes the regime classification, propos
 
 ## Disabling the bot
 
-To pause all automated runs: https://claude.ai/code/scheduled
+The bot runs via **Windows Task Scheduler**, not a cloud scheduler. To pause
+all automated runs, disable the tasks (PowerShell as Administrator):
 
-Toggle the `pre-market-routine` trigger off. No code changes needed.
+```powershell
+Get-ScheduledTask -TaskName "AutoTrading-*" | Disable-ScheduledTask
+```
+
+Re-enable with `Enable-ScheduledTask`. No code changes needed. Note: while
+disabled, the heartbeat is also off, so a disabled bot will not self-alert —
+disabling is a deliberate operator action, not a failure.
 
 ---
 
@@ -140,14 +146,70 @@ Toggle the `pre-market-routine` trigger off. No code changes needed.
 
 ---
 
-## Adding future routines
+## All scheduled tasks
 
-When Phase 3+ routines are ready, create additional scheduled tasks following the same pattern as the two existing ones:
+All registered together by `scripts/setup_scheduler.ps1` (run **as
+Administrator**). All share battery-safe settings (see Reliability below).
 
-| Routine | Status | Suggested schedule (ET) |
-|---------|--------|------------------------|
-| Pre-market | Live (`AutoTrading-PreMarket`) | Weekdays 7:30 AM |
-| Market open | Live (`AutoTrading-MarketOpen`) | Weekdays 9:35 AM |
-| Midday | Not yet built | Weekdays 12:30 PM |
-| End of day | Not yet built | Weekdays 4:15 PM |
-| Weekly review | Not yet built | Fridays 5:00 PM |
+| Task | Schedule (ET) | Wrapper |
+|------|---------------|---------|
+| `AutoTrading-PreMarket` | Weekdays 7:30 AM | `run_pre_market.ps1` |
+| `AutoTrading-MarketOpen` | Weekdays 9:35 AM | `run_market_open.ps1` |
+| `AutoTrading-Midday` | Weekdays 12:30 PM | `run_midday.ps1` |
+| `AutoTrading-EOD` | Weekdays 4:15 PM | `run_eod.ps1` |
+| `AutoTrading-Weekly` | Fridays 5:00 PM | `run_weekly.ps1` |
+| `AutoTrading-Heartbeat` | Weekdays 6:30 PM | `run_heartbeat.ps1` |
+
+---
+
+## Reliability (added after the W20 incident, 2026-05-17)
+
+Full post-mortem: `memory/health/2026-W20-reliability-incident.md`,
+`memory/weekly/2026-W20.md`. ADRs: `docs/decisions/0007-*`, `0008-*`.
+
+### Battery lockout — the root cause of the 3-day void
+
+`New-ScheduledTaskSettingsSet` defaults `DisallowStartIfOnBatteries=$true` and
+`StopIfGoingOnBatteries=$true`. On battery, every task silently skips and
+`NumberOfMissedRuns` stays 0 (scheduler looks healthy while the bot is dark).
+`setup_scheduler.ps1` now clears both on the shared settings object.
+
+> **Required after any change here:** re-run `setup_scheduler.ps1` **as
+> Administrator**. Modifying the already-registered `RunLevel Highest` tasks
+> needs elevation (`Set-ScheduledTask` is otherwise access-denied), so the
+> live tasks keep the old setting until this is done.
+
+### Headless git push (the audit trail must reach origin)
+
+The scheduled context cannot use the Windows Credential Manager. Setup:
+
+1. Create a GitHub **fine-grained PAT**, this repo only, Contents: Read and
+   write.
+2. Put it in `.env` as `GITHUB_TOKEN=...` (gitignored; never commit it).
+
+`scripts/git-credential-env.sh` feeds that token to git for `get` only (silent
+otherwise, so interactive use still works). `scripts/sync_git.ps1` runs at the
+end of every wrapper: it rebuilds the credential chain idempotently, pushes,
+verifies `origin/main..HEAD == 0`, and on failure writes a committed
+`memory/health/PUSH-FAILED-*.md`, emails, and exits non-zero.
+
+### Dead-man's-switch
+
+`AutoTrading-Heartbeat` (18:30 ET weekdays) runs `scripts/heartbeat.py`: it
+verifies recent trading days each have a `portfolio_daily.csv` row + an EOD
+section and that the audit trail reached origin. On a miss: committed
+`memory/health/ALERT-*.md`, SMTP email, non-zero exit. To stop a *known* outage
+from re-alerting, add a `RELIABILITY GAP` / `NO ROUTINE RAN` marker to that
+day's `memory/daily/*.md` (see the 2026-05-13..15 markers for the format).
+
+Email alerts need `SMTP_HOST/PORT/USER/PASS` + `NOTIFY_EMAIL_TO` in `.env`
+(Gmail: use an App Password, port 587). Until set, alerts are still durable
+locally and as non-zero exits.
+
+### Operator checklist after a host change / new machine
+
+1. `.env` present with `GITHUB_TOKEN` + `SMTP_*` filled in.
+2. Run `setup_scheduler.ps1` as Administrator; confirm all six tasks
+   `Ready` and `DisallowStartIfOnBatteries=False`.
+3. Trigger `AutoTrading-PreMarket` once manually; confirm a
+   `portfolio_daily.csv`/daily-log update and a clean `origin/main` push.
