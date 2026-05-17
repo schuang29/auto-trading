@@ -23,6 +23,10 @@ htmlcov/
 # Private memory — audit trail lives here but some entries may be private
 memory/private/
 
+# Rolling heartbeat liveness log — noisy operational data, not audit. The
+# ALERT-*.md / PUSH-FAILED-*.md incident files in memory/health/ ARE committed.
+memory/health/heartbeat.log
+
 # OS
 .DS_Store
 Thumbs.db
