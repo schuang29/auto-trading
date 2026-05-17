@@ -102,4 +102,13 @@ if ($ExitCode -ne 0) {
     exit $ExitCode
 }
 
+# ── Verify the audit trail actually reached origin (loud on failure) ──────────
+Write-Log "Verifying git sync with origin/main..."
+& "$ProjectRoot\scripts\sync_git.ps1" -ProjectRoot $ProjectRoot -Context "weekly"
+if ($LASTEXITCODE -ne 0) {
+    Write-Log "ERROR: git sync verification FAILED — see memory/health/ and SMTP alert."
+} else {
+    Write-Log "Git sync verified."
+}
+
 Write-Log "=== Weekly Review Routine Completed Successfully ==="

@@ -96,10 +96,18 @@ git add memory/decisions/ memory/positions.md
 $HasChanges = git diff --cached --quiet; $HasChanges = -not $?
 if ($HasChanges) {
     git commit -m "memory: market-open execution $Today"
-    git push origin main
-    Write-Log "Memory committed and pushed."
+    Write-Log "Memory committed."
 } else {
     Write-Log "No memory changes to commit (no orders placed)."
+}
+
+# ── Verify the audit trail actually reached origin (loud on failure) ──────────
+Write-Log "Verifying git sync with origin/main..."
+& "$ProjectRoot\scripts\sync_git.ps1" -ProjectRoot $ProjectRoot -Context "market-open"
+if ($LASTEXITCODE -ne 0) {
+    Write-Log "ERROR: git sync verification FAILED — see memory/health/ and SMTP alert."
+} else {
+    Write-Log "Git sync verified."
 }
 
 Write-Log "=== Market-Open Routine Completed Successfully ==="
