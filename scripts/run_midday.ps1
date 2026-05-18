@@ -1,5 +1,5 @@
 # run_midday.ps1
-# Wrapper script for Task Scheduler — runs at 12:30 PM ET on weekdays.
+# Wrapper script for Task Scheduler - runs at 12:30 PM ET on weekdays.
 # Invokes the midday routine via Claude Code, commits memory updates to GitHub.
 #
 # Task Scheduler action:
@@ -9,7 +9,7 @@
 
 $ErrorActionPreference = "Stop"
 
-# ── All paths declared upfront ────────────────────────────────────────────────
+# -- All paths declared upfront ------------------------------------------------
 $ProjectRoot = "C:\Users\schua\Personal\Projects\auto-trading"
 $LogDir      = "$ProjectRoot\logs"
 $Today       = (Get-Date -Format "yyyy-MM-dd")
@@ -17,7 +17,7 @@ $LogFile     = "$LogDir\midday_$Today.log"
 $VenvPython  = "$ProjectRoot\.venv\Scripts\python.exe"
 $EnvFile     = "$ProjectRoot\.env"
 
-# ── Ensure logs directory exists ──────────────────────────────────────────────
+# -- Ensure logs directory exists ----------------------------------------------
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
 
 function Write-Log {
@@ -32,7 +32,7 @@ Write-Log "=== Midday Routine Starting ==="
 Write-Log "Date: $Today"
 Set-Location $ProjectRoot
 
-# ── Inject confirmed tool paths into PATH ─────────────────────────────────────
+# -- Inject confirmed tool paths into PATH -------------------------------------
 $env:PATH = @(
     "C:\Users\schua\AppData\Local\Programs\Python\Python311",
     "C:\Users\schua\AppData\Local\Programs\Python\Python311\Scripts",
@@ -44,7 +44,7 @@ $env:PATH = @(
 
 $env:PATH = $env:PATH -replace ([regex]::Escape("C:\Users\schua\AppData\Local\Microsoft\WindowsApps") + ";?"), ""
 
-# ── Verify required tools ─────────────────────────────────────────────────────
+# -- Verify required tools -----------------------------------------------------
 foreach ($tool in @("git", "claude")) {
     $found = Get-Command $tool -ErrorAction SilentlyContinue
     if (-not $found) {
@@ -59,7 +59,7 @@ if (-not (Test-Path $VenvPython)) {
     exit 1
 }
 
-# ── Load .env ─────────────────────────────────────────────────────────────────
+# -- Load .env -----------------------------------------------------------------
 if (Test-Path $EnvFile) {
     Write-Log "Loading .env..."
     foreach ($line in (Get-Content $EnvFile)) {
@@ -78,7 +78,7 @@ if (Test-Path $EnvFile) {
     exit 1
 }
 
-# ── Run Claude Code midday routine ────────────────────────────────────────────
+# -- Run Claude Code midday routine --------------------------------------------
 Write-Log "Launching Claude Code midday routine..."
 
 $ClaudePrompt = (
@@ -99,11 +99,11 @@ if ($ExitCode -ne 0) {
     exit $ExitCode
 }
 
-# ── Verify the audit trail actually reached origin (loud on failure) ──────────
+# -- Verify the audit trail actually reached origin (loud on failure) ----------
 Write-Log "Verifying git sync with origin/main..."
 & "$ProjectRoot\scripts\sync_git.ps1" -ProjectRoot $ProjectRoot -Context "midday"
 if ($LASTEXITCODE -ne 0) {
-    Write-Log "ERROR: git sync verification FAILED — see memory/health/ and SMTP alert."
+    Write-Log "ERROR: git sync verification FAILED - see memory/health/ and SMTP alert."
 } else {
     Write-Log "Git sync verified."
 }

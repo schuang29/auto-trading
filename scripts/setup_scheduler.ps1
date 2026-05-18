@@ -12,17 +12,17 @@ $settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
     -WakeToRun
 
-# ── Run even on battery ───────────────────────────────────────────────────────
-# ROOT CAUSE of the 2026-05-13→15 three-day void: New-ScheduledTaskSettingsSet
+# -- Run even on battery -------------------------------------------------------
+# ROOT CAUSE of the 2026-05-13->15 three-day void: New-ScheduledTaskSettingsSet
 # defaults BOTH of these to $true, so every task silently refused to start
 # whenever the laptop was on battery at the scheduled time. Windows does not
 # count battery-blocked starts in NumberOfMissedRuns, so the scheduler looked
 # "healthy" while the bot was dark. There is no negative switch for
-# DisallowStartIfOnBatteries — it must be cleared on the object explicitly.
+# DisallowStartIfOnBatteries - it must be cleared on the object explicitly.
 $settings.DisallowStartIfOnBatteries = $false
 $settings.StopIfGoingOnBatteries     = $false
 
-# ── Pre-market: 7:30 AM ET, weekdays ─────────────────────────────────────────
+# -- Pre-market: 7:30 AM ET, weekdays -----------------------------------------
 $action = New-ScheduledTaskAction `
     -Execute "powershell.exe" `
     -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ProjectRoot\scripts\run_pre_market.ps1`"" `
@@ -44,7 +44,7 @@ Register-ScheduledTask `
 
 Write-Host "Registered: AutoTrading-PreMarket (7:30 AM)"
 
-# ── Market-open: 9:35 AM ET, weekdays ────────────────────────────────────────
+# -- Market-open: 9:35 AM ET, weekdays ----------------------------------------
 $action = New-ScheduledTaskAction `
     -Execute "powershell.exe" `
     -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ProjectRoot\scripts\run_market_open.ps1`"" `
@@ -66,7 +66,7 @@ Register-ScheduledTask `
 
 Write-Host "Registered: AutoTrading-MarketOpen (9:35 AM)"
 
-# ── Midday: 12:30 PM ET, weekdays ────────────────────────────────────────────
+# -- Midday: 12:30 PM ET, weekdays --------------------------------------------
 $action = New-ScheduledTaskAction `
     -Execute "powershell.exe" `
     -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ProjectRoot\scripts\run_midday.ps1`"" `
@@ -88,7 +88,7 @@ Register-ScheduledTask `
 
 Write-Host "Registered: AutoTrading-Midday (12:30 PM)"
 
-# ── EOD: 4:15 PM ET, weekdays ─────────────────────────────────────────────────
+# -- EOD: 4:15 PM ET, weekdays -------------------------------------------------
 $action = New-ScheduledTaskAction `
     -Execute "powershell.exe" `
     -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ProjectRoot\scripts\run_eod.ps1`"" `
@@ -110,7 +110,7 @@ Register-ScheduledTask `
 
 Write-Host "Registered: AutoTrading-EOD (4:15 PM)"
 
-# ── Weekly review: 5:00 PM ET, Fridays only ──────────────────────────────────
+# -- Weekly review: 5:00 PM ET, Fridays only ----------------------------------
 $action = New-ScheduledTaskAction `
     -Execute "powershell.exe" `
     -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ProjectRoot\scripts\run_weekly.ps1`"" `
@@ -132,7 +132,7 @@ Register-ScheduledTask `
 
 Write-Host "Registered: AutoTrading-Weekly (Fri 5:00 PM)"
 
-# ── Heartbeat: 6:30 PM ET, weekdays (dead-man's-switch, after EOD) ────────────
+# -- Heartbeat: 6:30 PM ET, weekdays (dead-man's-switch, after EOD) ------------
 $action = New-ScheduledTaskAction `
     -Execute "powershell.exe" `
     -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ProjectRoot\scripts\run_heartbeat.ps1`"" `

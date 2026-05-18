@@ -1,5 +1,5 @@
 # run_pre_market.ps1
-# Wrapper script for Task Scheduler — handles PATH, venv, logging, and Windows date.
+# Wrapper script for Task Scheduler - handles PATH, venv, logging, and Windows date.
 #
 # Task Scheduler action:
 #   Program:   powershell.exe
@@ -8,7 +8,7 @@
 
 $ErrorActionPreference = "Stop"
 
-# ── All paths declared upfront ────────────────────────────────────────────────
+# -- All paths declared upfront ------------------------------------------------
 $PythonExe   = "C:\Users\schua\AppData\Local\Programs\Python\Python311\python.exe"
 $ProjectRoot = "C:\Users\schua\Personal\Projects\auto-trading"
 $LogDir      = "$ProjectRoot\logs"
@@ -18,7 +18,7 @@ $VenvPython  = "$ProjectRoot\.venv\Scripts\python.exe"
 $VenvPip     = "$ProjectRoot\.venv\Scripts\pip.exe"
 $EnvFile     = "$ProjectRoot\.env"
 
-# ── Ensure logs directory exists ──────────────────────────────────────────────
+# -- Ensure logs directory exists ----------------------------------------------
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
 
 function Write-Log {
@@ -34,7 +34,7 @@ Write-Log "Date: $Today"
 Write-Log "Project root: $ProjectRoot"
 Set-Location $ProjectRoot
 
-# ── Inject confirmed tool paths into PATH ─────────────────────────────────────
+# -- Inject confirmed tool paths into PATH -------------------------------------
 $env:PATH = @(
     "C:\Users\schua\AppData\Local\Programs\Python\Python311",
     "C:\Users\schua\AppData\Local\Programs\Python\Python311\Scripts",
@@ -44,10 +44,10 @@ $env:PATH = @(
     $env:PATH
 ) -join ";"
 
-# Strip the WindowsApps Python stub — opens the Store instead of running Python
+# Strip the WindowsApps Python stub - opens the Store instead of running Python
 $env:PATH = $env:PATH -replace ([regex]::Escape("C:\Users\schua\AppData\Local\Microsoft\WindowsApps") + ";?"), ""
 
-# ── Verify required tools ─────────────────────────────────────────────────────
+# -- Verify required tools -----------------------------------------------------
 $allFound = $true
 
 if (Test-Path $PythonExe) {
@@ -73,7 +73,7 @@ if (-not $allFound) {
     exit 1
 }
 
-# ── Set up venv if it doesn't exist ───────────────────────────────────────────
+# -- Set up venv if it doesn't exist -------------------------------------------
 if (-not (Test-Path $VenvPython)) {
     Write-Log "Creating virtual environment..."
     & $PythonExe -m venv .venv
@@ -85,10 +85,10 @@ if (-not (Test-Path $VenvPython)) {
 
     Write-Log "Venv ready."
 } else {
-    Write-Log "Venv OK — skipping creation."
+    Write-Log "Venv OK - skipping creation."
 }
 
-# ── Load .env into process environment ────────────────────────────────────────
+# -- Load .env into process environment ----------------------------------------
 if (Test-Path $EnvFile) {
     Write-Log "Loading .env..."
     foreach ($line in (Get-Content $EnvFile)) {
@@ -103,10 +103,10 @@ if (Test-Path $EnvFile) {
     }
     Write-Log ".env loaded."
 } else {
-    Write-Log "WARNING: .env not found at $EnvFile — API calls will fail."
+    Write-Log "WARNING: .env not found at $EnvFile - API calls will fail."
 }
 
-# ── Run Claude Code pre-market routine ────────────────────────────────────────
+# -- Run Claude Code pre-market routine ----------------------------------------
 # --dangerously-skip-permissions: allows Claude Code to write files and run
 # commands without interactive prompts. Safe here because this is a controlled,
 # local project with a restricted guardrails layer. Required for unattended
@@ -130,11 +130,11 @@ if ($ExitCode -ne 0) {
     exit $ExitCode
 }
 
-# ── Verify the audit trail actually reached origin (loud on failure) ──────────
+# -- Verify the audit trail actually reached origin (loud on failure) ----------
 Write-Log "Verifying git sync with origin/main..."
 & "$ProjectRoot\scripts\sync_git.ps1" -ProjectRoot $ProjectRoot -Context "pre-market"
 if ($LASTEXITCODE -ne 0) {
-    Write-Log "ERROR: git sync verification FAILED — see memory/health/ and SMTP alert."
+    Write-Log "ERROR: git sync verification FAILED - see memory/health/ and SMTP alert."
 } else {
     Write-Log "Git sync verified."
 }

@@ -1,5 +1,5 @@
 # run_market_open.ps1
-# Wrapper script for Task Scheduler — runs at 9:35 AM ET on weekdays.
+# Wrapper script for Task Scheduler - runs at 9:35 AM ET on weekdays.
 # Reads today's proposals from memory/proposals/ and executes them on Alpaca paper.
 #
 # Task Scheduler action:
@@ -9,7 +9,7 @@
 
 $ErrorActionPreference = "Stop"
 
-# ── All paths declared upfront ────────────────────────────────────────────────
+# -- All paths declared upfront ------------------------------------------------
 $PythonExe   = "C:\Users\schua\AppData\Local\Programs\Python\Python311\python.exe"
 $ProjectRoot = "C:\Users\schua\Personal\Projects\auto-trading"
 $LogDir      = "$ProjectRoot\logs"
@@ -18,7 +18,7 @@ $LogFile     = "$LogDir\market_open_$Today.log"
 $VenvPython  = "$ProjectRoot\.venv\Scripts\python.exe"
 $EnvFile     = "$ProjectRoot\.env"
 
-# ── Ensure logs directory exists ──────────────────────────────────────────────
+# -- Ensure logs directory exists ----------------------------------------------
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
 
 function Write-Log {
@@ -33,7 +33,7 @@ Write-Log "=== Market-Open Routine Starting ==="
 Write-Log "Date: $Today"
 Set-Location $ProjectRoot
 
-# ── Inject confirmed tool paths into PATH ─────────────────────────────────────
+# -- Inject confirmed tool paths into PATH -------------------------------------
 $env:PATH = @(
     "C:\Users\schua\AppData\Local\Programs\Python\Python311",
     "C:\Users\schua\AppData\Local\Programs\Python\Python311\Scripts",
@@ -45,13 +45,13 @@ $env:PATH = @(
 
 $env:PATH = $env:PATH -replace ([regex]::Escape("C:\Users\schua\AppData\Local\Microsoft\WindowsApps") + ";?"), ""
 
-# ── Verify venv exists ────────────────────────────────────────────────────────
+# -- Verify venv exists --------------------------------------------------------
 if (-not (Test-Path $VenvPython)) {
     Write-Log "ERROR: venv not found at $VenvPython - run the pre-market routine first."
     exit 1
 }
 
-# ── Load .env ─────────────────────────────────────────────────────────────────
+# -- Load .env -----------------------------------------------------------------
 if (Test-Path $EnvFile) {
     Write-Log "Loading .env..."
     foreach ($line in (Get-Content $EnvFile)) {
@@ -70,7 +70,7 @@ if (Test-Path $EnvFile) {
     exit 1
 }
 
-# ── Verify today's proposals file exists ──────────────────────────────────────
+# -- Verify today's proposals file exists --------------------------------------
 $ProposalsFile = "$ProjectRoot\memory\proposals\$Today.json"
 if (-not (Test-Path $ProposalsFile)) {
     Write-Log "ERROR: No proposals file at $ProposalsFile"
@@ -79,7 +79,7 @@ if (-not (Test-Path $ProposalsFile)) {
 }
 Write-Log "Proposals file found: $ProposalsFile"
 
-# ── Execute market-open script ────────────────────────────────────────────────
+# -- Execute market-open script ------------------------------------------------
 Write-Log "Running market_open.py..."
 $pyOutput = & $VenvPython "$ProjectRoot\scripts\market_open.py"
 $ExitCode = $LASTEXITCODE
@@ -90,7 +90,7 @@ if ($ExitCode -ne 0) {
     exit $ExitCode
 }
 
-# ── Commit decisions and positions to git ─────────────────────────────────────
+# -- Commit decisions and positions to git -------------------------------------
 Write-Log "Committing memory updates..."
 git add memory/decisions/ memory/positions.md
 $HasChanges = git diff --cached --quiet; $HasChanges = -not $?
@@ -101,11 +101,11 @@ if ($HasChanges) {
     Write-Log "No memory changes to commit (no orders placed)."
 }
 
-# ── Verify the audit trail actually reached origin (loud on failure) ──────────
+# -- Verify the audit trail actually reached origin (loud on failure) ----------
 Write-Log "Verifying git sync with origin/main..."
 & "$ProjectRoot\scripts\sync_git.ps1" -ProjectRoot $ProjectRoot -Context "market-open"
 if ($LASTEXITCODE -ne 0) {
-    Write-Log "ERROR: git sync verification FAILED — see memory/health/ and SMTP alert."
+    Write-Log "ERROR: git sync verification FAILED - see memory/health/ and SMTP alert."
 } else {
     Write-Log "Git sync verified."
 }

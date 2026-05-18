@@ -11,7 +11,7 @@
 #      through to the interactive 'manager' helper when the token is absent.
 #   2. Pushes origin/main and VERIFIES nothing is left unpushed.
 #   3. On failure, makes it LOUD: a committed-intent health marker, an SMTP
-#      alert, and a non-zero exit — never a silent local-only note again.
+#      alert, and a non-zero exit - never a silent local-only note again.
 #
 # Safe to call every run: the credential-helper config is rebuilt
 # deterministically (idempotent), and the push is a no-op when already synced.
@@ -20,7 +20,7 @@
 
 param(
     [string]$ProjectRoot = "C:\Users\schua\Personal\Projects\auto-trading",
-    [string]$Context     = "routine"   # e.g. "pre-market", "eod" — for the alert
+    [string]$Context     = "routine"   # e.g. "pre-market", "eod" - for the alert
 )
 
 $ErrorActionPreference = "Continue"
@@ -28,7 +28,7 @@ Set-Location $ProjectRoot
 
 function Sg-Log { param([string]$m) Write-Host "[sync_git] $m" }
 
-# ── 1. Ensure headless-capable credential helper (idempotent) ─────────────────
+# -- 1. Ensure headless-capable credential helper (idempotent) -----------------
 # Rebuild the local helper chain deterministically every call so it self-heals
 # if .git/config is ever clobbered. Final chain:
 #   [ ""(reset, drops inherited global manager), env-token script, manager ]
@@ -36,7 +36,7 @@ function Sg-Log { param([string]$m) Write-Host "[sync_git] $m" }
 # The env-token helper (scripts/git-credential-env.sh) emits the PAT only for
 # `get` and only when GITHUB_TOKEN is set; otherwise it is silent so git falls
 # through to 'manager' for interactive use. The PAT is NEVER written to
-# .git/config — only this script's path is — and .git/config is not committed.
+# .git/config - only this script's path is - and .git/config is not committed.
 #
 # Two Windows/PowerShell-5.1 gotchas this sequence works around, learned the
 # hard way: (a) `git config key ""` FAILS on a multi-valued key, so we
@@ -50,10 +50,10 @@ git config --local --add credential.helper $credHelper | Out-Null
 git config --local --add credential.helper "manager"   | Out-Null
 
 if (-not $env:GITHUB_TOKEN) {
-    Sg-Log "WARNING: GITHUB_TOKEN not in environment — headless push will fall back to 'manager' and likely fail in the scheduled context."
+    Sg-Log "WARNING: GITHUB_TOKEN not in environment - headless push will fall back to 'manager' and likely fail in the scheduled context."
 }
 
-# ── 2. Push and verify ────────────────────────────────────────────────────────
+# -- 2. Push and verify --------------------------------------------------------
 Sg-Log "Pushing origin main..."
 git push origin main 2>&1 | ForEach-Object { Sg-Log $_ }
 
@@ -66,7 +66,7 @@ if ($unpushed -eq "0") {
     exit 0
 }
 
-# ── 3. Failure: make it loud ──────────────────────────────────────────────────
+# -- 3. Failure: make it loud --------------------------------------------------
 $ts      = Get-Date -Format "yyyy-MM-dd_HHmmss"
 $today   = Get-Date -Format "yyyy-MM-dd"
 $health  = "$ProjectRoot\memory\health"
@@ -100,14 +100,14 @@ git add memory/health/ 2>&1 | Out-Null
 git commit -m "health: audit-trail push failure ($Context $today)" 2>&1 | ForEach-Object { Sg-Log $_ }
 git push origin main 2>&1 | ForEach-Object { Sg-Log $_ }
 
-# SMTP alert (best-effort; never blocks — local marker + non-zero exit are the
+# SMTP alert (best-effort; never blocks - local marker + non-zero exit are the
 # guaranteed channels). notify.py exits 2 when SMTP isn't configured yet.
 $venvPy = "$ProjectRoot\.venv\Scripts\python.exe"
 if (Test-Path $venvPy) {
-    $subject = "PUSH FAILURE — $Context $today"
+    $subject = "PUSH FAILURE - $Context $today"
     & $venvPy "$ProjectRoot\scripts\notify.py" --subject $subject --body $body 2>&1 | ForEach-Object { Sg-Log $_ }
 } else {
-    Sg-Log "venv python missing — skipped SMTP alert (local marker still written)."
+    Sg-Log "venv python missing - skipped SMTP alert (local marker still written)."
 }
 
 Sg-Log "FAIL: $unpushed commit(s) still unpushed. See $marker"
