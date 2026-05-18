@@ -31,12 +31,18 @@ ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = ROOT / ".env"
 
 
-def load_env(env_file: Path = ENV_FILE) -> dict[str, str]:
+def load_env(env_file: Path | None = None) -> dict[str, str]:
     """Parse KEY=VALUE lines from .env, mirroring the wrapper scripts.
 
     Returns only the keys found in the file; callers fall back to os.environ
     for values already injected into the process (the scheduled path).
+
+    `ENV_FILE` is resolved at call time (not bound as a default argument) so
+    tests can redirect it via monkeypatch and never touch the real .env / send
+    a real email.
     """
+    if env_file is None:
+        env_file = ENV_FILE
     values: dict[str, str] = {}
     if not env_file.exists():
         return values
