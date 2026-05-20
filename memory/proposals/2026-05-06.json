@@ -1,0 +1,7 @@
+{
+  "date": "2026-05-06",
+  "regime": "RISK-ON",
+  "confirmed": true,
+  "proposals": [],
+  "notes": "Regime confirmed RISK-ON (3/3 signals). No actionable orders: cash $5,385 (5.33%) only $329 above 5% min buffer (Rule 6.1); largest 50%-of-gap order (QQQ $501) would breach buffer; all others below $500 min order size (Rule 4.3). VTI at 30.1% (Rule 4.1 cap)."
+}

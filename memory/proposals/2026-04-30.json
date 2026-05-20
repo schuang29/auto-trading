@@ -1,0 +1,42 @@
+{
+  "date": "2026-04-30",
+  "regime": "RISK-ON",
+  "confirmed": true,
+  "proposals": [
+    {
+      "ticker": "DGRO",
+      "side": "buy",
+      "notional": 2500,
+      "rule": "3.1, 4.2, 2",
+      "priority": 1
+    },
+    {
+      "ticker": "QQQ",
+      "side": "buy",
+      "notional": 2200,
+      "rule": "3.1, 4.2, 2",
+      "priority": 2
+    },
+    {
+      "ticker": "VTI",
+      "side": "buy",
+      "notional": 1500,
+      "rule": "3.1, 4.2, 2",
+      "priority": 3
+    },
+    {
+      "ticker": "VEA",
+      "side": "buy",
+      "notional": 1300,
+      "rule": "3.1, 4.2, 2",
+      "priority": 4
+    },
+    {
+      "ticker": "VWO",
+      "side": "buy",
+      "notional": 1250,
+      "rule": "3.1, 4.2, 2",
+      "priority": 5
+    }
+  ]
+}
