@@ -1,0 +1,7 @@
+{
+  "date": "2026-05-21",
+  "regime": "RISK-ON",
+  "confirmed": true,
+  "proposals": [],
+  "notes": "Regime RISK-ON confirmed (3/3 signals, day 5 of run). No actionable trades: VTI at 30% hard cap (Rule 4.1) and deployable cash above 5% buffer (.66) is below  minimum order size (Rules 4.3, 6.1). No trailing-stop triggers (Rule 5.2). No regime shift (Rule 5.1)."
+}
