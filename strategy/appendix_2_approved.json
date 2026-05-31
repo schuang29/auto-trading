@@ -1,0 +1,166 @@
+{
+  "source": "FIRMWIDE ANNEX - PERSONAL TRADING POLICY APPENDIX 2 (v2.1, 31-Mar-2026)",
+  "description": "Authoritative machine-readable list of ETFs exempt from pre-clearance under firm personal trading policy. Only tickers in this list may be traded by the bot.",
+  "last_updated": "2026-04-24",
+  "region_filter": "USA",
+  "notes": [
+    "Tickers prefixed with '*' in the source PDF indicate non-USD or non-US-listed tickers; these are excluded from the JSON since Alpaca paper trades USD-listed US ETFs only.",
+    "Index tickers (SPX, VIX, RUT, NDX, MXEA, MXEFIX, TOPIX, etc.) are excluded — these are indices, not tradable ETFs.",
+    "Appendix 3 tickers (explicitly REMOVED from the approved list) are in guardrails/restricted.md and MUST NOT be added here, even if they appear tradable.",
+    "Goldman Sachs proprietary ETFs (GSxxx, GxXX) from the first USA block of Appendix 2 are included.",
+    "Innovator ETF Trust defined-outcome products (BJAN, PJAN, UJAN etc. and their month variants) are approved but excluded from the default universe — they have unusual payoff structures unsuitable for a regime-based rotation strategy. They are listed here for reference but the strategy should not trade them."
+  ],
+  "approved_tickers": {
+    "goldman_sachs_proprietary": [
+      "AAAU", "GBIL", "GBND", "GCAL", "GCOR", "GEMD", "GHYB", "GIGB", "GIGL",
+      "GIND", "GINN", "GMNY", "GMUB", "GMUN", "GPIQ", "GPIX", "GPRF", "GSC",
+      "GSEU", "GSEW", "GSID", "GSIE", "GSIG", "GSJY", "GSLC", "GSSC", "GSST",
+      "GSUS", "GSWO", "GTEK", "GTIP", "GTPE", "GUMI", "GUSA", "GUSE", "GVIP",
+      "GVLE", "GVUS", "GXUS", "JUST"
+    ],
+    "broad_market_equity": [
+      "SPY", "VOO", "IVV", "VTI", "ITOT", "SCHB", "SCHX", "VV", "IWB", "IWV",
+      "IYY", "VTHR", "VONE", "VXF", "DFUS"
+    ],
+    "large_cap_value": [
+      "IVE", "IUSV", "IWD", "VTV", "VONV", "SCHV", "SPYV", "VOOV", "VLUE",
+      "DFUV", "RWL", "PRF"
+    ],
+    "large_cap_growth_and_factor": [
+      "QUAL", "USMV", "RSP", "DGRO", "NOBL", "SPYM", "SUSA", "ESGU"
+    ],
+    "mid_cap": [
+      "IJH", "IJJ", "IJK", "IWR", "IWP", "IWS", "VO", "VOE", "VOT", "SCHM",
+      "MDY", "IMCG", "IVOO"
+    ],
+    "small_cap": [
+      "IJR", "IJS", "IJT", "IWM", "IWN", "IWO", "VB", "VBK", "VBR", "VTWO",
+      "SCHA", "IWC", "DFAT", "RWJ", "RWK", "VIOG"
+    ],
+    "dividend_and_income": [
+      "DVY", "SCHD", "SDY", "SPYD", "SPHD", "DWX", "IDV", "SDIV", "PEY",
+      "TMDV", "VYM", "VYMI", "DEM", "JEPI", "JEPQ", "XYLD", "FENI"
+    ],
+    "nasdaq_and_tech": [
+      "QQQ", "QQQM", "AIQ"
+    ],
+    "international_developed": [
+      "VEA", "VXUS", "IEFA", "EFA", "IDEV", "VEU", "SCHF", "IXUS", "ACWX",
+      "ACWI", "EFV", "BBEU", "VGK", "IEUR", "IEV", "EZU", "BBJP", "EWJ",
+      "JPXN", "DXJ", "DBJP", "DBEF", "DBEU", "HEDJ", "HEFA", "HEWJ", "HEZU",
+      "VPL", "EWC", "DFIV", "IQLT", "DFSI", "FNDF", "DWM", "SCZ", "IHDG",
+      "OPPE", "FEZ", "BBCA", "EASG", "ESGD"
+    ],
+    "emerging_markets": [
+      "VWO", "IEMG", "EEM", "EEMV", "SPEM", "FNDE", "SCHE", "INDA", "FLIN",
+      "GLIN", "ASHR", "ASHS", "NFTY"
+    ],
+    "esg_and_sustainable": [
+      "ESGU", "ESGV", "SUSA", "ESGD", "ESML", "EASG", "BSMC", "BINV", "BUSA"
+    ],
+    "us_treasury_bonds": [
+      "SHY", "IEI", "IEF", "TLT", "SHV", "SGOV", "BIL", "GOVT", "SPTS",
+      "SCHO", "SCHR", "SCHZ", "VGIT", "VGSH", "SPTL", "ZROZ", "BLV", "ILTB",
+      "BSV", "ISTB", "VUSC"
+    ],
+    "us_investment_grade_credit": [
+      "AGG", "BND", "BNDX", "LQD", "IGIB", "VCIT", "VCLT", "VCSH", "IUSB",
+      "BOND", "SPIB", "MBB"
+    ],
+    "high_yield_credit": [
+      "HYG", "JNK", "USHY", "HYS", "SJNK", "SPHY", "SRLN", "FTSL", "JAAA",
+      "JBBB"
+    ],
+    "preferred_and_hybrid": [
+      "PFF", "PGX"
+    ],
+    "municipal_bonds": [
+      "MUB", "VTEB", "TFI", "SHM", "HYMB", "HYD", "MUNY", "SUB", "NYF"
+    ],
+    "emerging_market_debt": [
+      "EMB", "EMLC", "LEMB", "PCY"
+    ],
+    "tips_and_floating_rate": [
+      "TIP", "STIP", "VTIP", "SCHP", "USFR"
+    ],
+    "short_term_income": [
+      "JPST"
+    ],
+    "gold_and_precious_metals": [
+      "GLD", "IAU", "IAUM", "AAAU", "SLV", "PPLT", "PALL"
+    ],
+    "commodities_broad": [
+      "GSG", "DBA", "DBO", "CPER"
+    ],
+    "commodities_single": [
+      "USO", "USL", "UGA", "UNG", "BNO", "CORN", "SOYB", "WEAT", "CANE",
+      "TAGS"
+    ],
+    "biotech_and_healthcare": [
+      "XBI", "BBC"
+    ],
+    "banks_and_financial_services": [
+      "KBE", "KRE"
+    ],
+    "energy_and_resources": [
+      "XOP", "SSGCGH"
+    ],
+    "other_sectors_and_thematic": [
+      "FIW", "XRT", "XSD", "PBD", "PBW", "LOUP", "BLDG"
+    ],
+    "international_hedged_currency": [
+      "HEDJ", "HEFA", "HEWJ", "HEZU", "DBEF", "DBEU", "DBJP"
+    ],
+    "allocation_and_multi_asset": [
+      "AOA", "GAA", "TRTY", "VT"
+    ],
+    "real_estate": [
+      "VNQI"
+    ],
+    "volatility_products": [
+      "VIXY", "VXX"
+    ],
+    "crypto_etps": [
+      "ARKB", "BITB", "BTCO", "BTCW", "BRRR", "FBTC", "GBTC", "HODL", "IBIT",
+      "DEFI", "BTC", "EZBC", "ETHA", "ETHV", "ETHW", "ETH", "ETHE", "EZET",
+      "FETH", "QETH", "TETH"
+    ],
+    "inverse_and_short": [
+      "SH"
+    ],
+    "innovator_defined_outcome_reference_only": [
+      "BJAN", "BFEB", "BMAR", "BAPR", "BMAY", "BJUN", "BJUL", "BAUG", "BSEP",
+      "BOCT", "BNOV", "BDEC",
+      "PJAN", "PFEB", "PMAR", "PAPR", "PMAY", "PJUN", "PJUL", "PAUG", "PSEP",
+      "POCT", "PNOV", "PDEC",
+      "UJAN", "UFEB", "UMAR", "UAPR", "UMAY", "UJUN", "UJUL", "UAUG", "USEP",
+      "UOCT", "UNOV", "UDEC",
+      "NJAN", "NFEB", "NMAR", "NAPR", "NMAY", "NJUN", "NJUL", "NAUG", "NSEP",
+      "NOCT", "NNOV", "NDEC",
+      "KJAN", "KFEB", "KMAR", "KAPR", "KMAY", "KJUN", "KJUL", "KAUG", "KSEP",
+      "KOCT", "KNOV", "KDEC",
+      "IJAN", "IFEB", "IMAR", "IAPR", "IMAY", "IJUN", "IJUL", "IAUG", "ISEP",
+      "IOCT", "INOV", "IDEC",
+      "EJAN", "EAPR", "EJUL", "EOCT",
+      "BALT", "EALT", "ZALT", "QBUF", "RBUF", "IBUF", "EBUF",
+      "JAJL", "APOC",
+      "ZJAN", "ZFEB", "ZMAR", "ZAPR", "ZMAY", "ZJUN", "ZJUL", "ZAUG", "ZSEP",
+      "ZOCT", "ZNOV", "ZDEK",
+      "AJAN", "AAPR", "AJUL", "AOCT",
+      "TJAN", "TAPR", "TJUL", "TOCT",
+      "DDSQ", "DDNQ", "DDTL", "DDTS", "DDTO", "DDTN", "DDTD", "DDTJ", "DDTF",
+      "DDFL", "DDFS", "DDFO", "DDFN", "DDFD", "DDFJ", "DDFF", "DDFM", "DDTM",
+      "LJAN", "LAPR", "LJUL", "LOCT",
+      "JANH", "JANJ", "APRH", "APRJ", "JULH", "JULJ", "OCTH", "OCTJ",
+      "QTJA", "QTAP", "QTJL", "QTOC",
+      "XBJA", "XBAP", "XBJL", "XBOC",
+      "XTJA", "XTAP", "XTJL", "XTOC",
+      "XDSQ", "XDQQ",
+      "SFLR", "QFLR", "RFLR", "IFLR",
+      "BFRZ", "BUFB", "BUFF", "BSTP", "PSTP", "QHDG",
+      "ACEI", "ACII", "SPUT", "EPRF",
+      "TFJL", "TBJL", "XUSP", "QBF",
+      "IGTR", "XBFR", "NBFR", "KBFR", "IBFR"
+    ]
+  }
+}

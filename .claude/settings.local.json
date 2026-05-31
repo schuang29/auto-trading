@@ -15,7 +15,8 @@
       "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-PreMarket\")",
       "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-MarketOpen\")",
       "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-Midday\")",
-      "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-EOD\")"
+      "Bash(schtasks /query /fo LIST /v /tn \"AutoTrading-EOD\")",
+      "Bash(python *)"
     ]
   }
 }
