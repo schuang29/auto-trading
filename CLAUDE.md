@@ -17,9 +17,61 @@ The full project plan is in `PLAN.md`. Read it if you have not in this session. 
 
 Always check what phase the project is in (see `PLAN.md` §6) before suggesting work. Don't build Phase 4 features when Phase 1 isn't done.
 
-## Scheduled automation
+## Scheduled automation — WOUND DOWN 2026-05-31
 
-The **pre-market routine** runs via **Windows Task Scheduler** (task name: `AutoTrading-PreMarket`) at 7:30 AM ET on weekdays. The wrapper script is `scripts/run_pre_market.ps1` — it activates the venv, loads `.env`, runs `claude --dangerously-skip-permissions --print`, and commits + pushes `memory/daily/` to GitHub. Do not suggest setting up scheduling for the pre-market routine — it is already running. Full operational details are in `docs/runbook.md`.
+The five scheduled routines plus heartbeat were **deliberately stopped on 2026-05-31** by operator decision. See `docs/decisions/0009-wind-down-scheduled-routines.md` for rationale. No autonomous runs are happening; the bot is dormant. Do not assume a missing daily log from 2026-05-30 onward is an outage — that is the expected steady state until reinstated.
+
+What is still live: the Alpaca paper account (positions frozen at 2026-05-29 EOD, ~$104,723 across 9 ETFs), the GitHub repo, the codebase, and the `memory/` audit trail (append-only — Rule 5 still applies; do not retroactively edit historical logs).
+
+**To reinstate the schedule** (when the operator decides to resume):
+
+1. Confirm `.env` still has a valid `GITHUB_TOKEN` (PAT expires ~2027-05 per `memory/git-push-wincredman-failure.md`) and the `SMTP_*` variables for heartbeat alerts.
+2. Open PowerShell **as Administrator** and run:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File "C:\Users\schua\Personal\Projects\auto-trading\scripts\setup_scheduler.ps1"
+   ```
+   This re-registers all six tasks (`AutoTrading-PreMarket`, `MarketOpen`, `Midday`, `EOD`, `Weekly`, `Heartbeat`) with the correct battery-safe settings (`DisallowStartIfOnBatteries=$false`, `StopIfGoingOnBatteries=$false` — the W20 incident root cause).
+3. Run `scripts/preflight.ps1` (the `/preflight` skill) and verify GO/NO-GO is GO.
+4. Trigger `AutoTrading-PreMarket` once manually from Task Scheduler (`taskschd.msc` → right-click → Run); confirm a `memory/daily/YYYY-MM-DD.md` update and a clean `origin/main` push.
+5. The first post-resumption pre-market brief will reference a stale "most recent prior daily log" — that is expected and is not a regime-continuity break (signals are recomputed fresh each run). The regime-confirmation logic will treat it as day-1 of whatever regime the signals show.
+
+Full operational details: `docs/runbook.md`. The setup script `scripts/setup_scheduler.ps1` is unchanged and is the source of truth for task definitions; re-reading it shows exactly what the schedule looked like before wind-down.
+
+---
+
+## Operational scripts & verification
+
+### PowerShell authoring rules
+
+Every `.ps1` in `scripts/` is run by Windows Task Scheduler via
+`powershell.exe -File` (Windows PowerShell **5.1**). PS 5.1 decodes a **no-BOM**
+script using the **ANSI code page**, so a single non-ASCII character (em-dash
+`—`, box-drawing `─`, smart quotes) in a *string literal* desyncs the tokenizer
+and the entire script fails to parse. On 2026-05-17 this nearly shipped a
+regression that would have re-caused a multi-day silent outage.
+
+- **`.ps1` files are ASCII-only.** No em-dashes, box-drawing, or smart quotes —
+  in code *or* comments. Use `-`, `--`, `'`, `"`, `...`. `scripts/check_ps1.py`
+  enforces this; run it (`--full` for the real `powershell.exe` parse) after
+  any `.ps1` edit.
+- **Validate via the real launcher.** A `.ps1` "parses" only if
+  `powershell.exe -File` (or `[Parser]::ParseFile` invoked through
+  `powershell.exe`) accepts it. The agent's own PowerShell tool / the .NET
+  parser default to UTF-8 and will *not* reproduce the Task Scheduler failure —
+  they are not sufficient evidence.
+
+### Definition of Done for unattended components
+
+A scheduled/unattended component (wrapper, `sync_git`, heartbeat, scheduler
+setup) is **not "ready", "fixed", or "recovered" until it has been exercised
+via the exact production invocation path**, not a proxy:
+
+- Parse + (where side-effect-free) **execute** the script via
+  `powershell.exe -File`, the way Task Scheduler will.
+- Run `scripts/preflight.ps1` (the `/preflight` skill) and report its GO/NO-GO
+  verdict honestly. Never declare readiness while any check fails.
+- Do this **proactively**, before claiming completion — do not wait to be asked
+  to double-check.
 
 ---
 
